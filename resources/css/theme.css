@@ -1,0 +1,200 @@
+@layer base {
+    :root {
+        color-scheme: light;
+        --oq-blue-50: 240 249 255;
+        --oq-blue-100: 224 242 254;
+        --oq-blue-200: 186 230 253;
+        --oq-blue-300: 125 211 252;
+        --oq-blue-400: 56 189 248;
+        --oq-blue-500: 14 165 233;
+        --oq-blue-600: 2 132 199;
+        --oq-blue-700: 3 105 161;
+        --oq-blue-800: 30 90 122;
+        --oq-blue-900: 22 65 89;
+        --oq-blue-950: 12 41 58;
+        --oq-gold-50: 240 249 255;
+        --oq-gold-100: 224 242 254;
+        --oq-gold-200: 186 230 253;
+        --oq-gold-300: 125 211 252;
+        --oq-gold-400: 140 184 201;
+        --oq-gold-500: 52 113 76;
+        --oq-gold-600: 36 91 58;
+        --oq-gold-700: 30 78 50;
+        --oq-gold-800: 22 74 53;
+        --oq-gold-900: 18 56 41;
+        --oq-gold-950: 9 34 25;
+        --oq-primary-rgb: var(--oq-blue-800);
+        --oq-primary: rgb(var(--oq-primary-rgb));
+        --oq-primary-dark: rgb(var(--oq-blue-900));
+        --oq-gold: rgb(var(--oq-gold-400));
+        --oq-gold-ink: rgb(var(--oq-gold-600));
+        --oq-ivory: #ffffff;
+        --oq-surface: #ffffff;
+        --oq-surface-muted: #f4f6f8;
+        --oq-line: #e5e7eb;
+        --oq-ink: #222222;
+        --oq-muted: #64748b;
+        --oq-font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        --oq-font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        --oq-font-heading: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        --color-primary: var(--oq-primary);
+        --color-secondary: var(--oq-primary-dark);
+    }
+    html { background-color: var(--oq-ivory); accent-color: var(--oq-primary); font-family: var(--oq-font-body); }
+    body { background-color: var(--oq-ivory); color: var(--oq-ink); font-family: var(--oq-font-body); }
+    h1, h2, h3, h4, h5, h6, .font-heading { font-family: var(--oq-font-heading); font-weight: 700; letter-spacing: -.015em; }
+    :is(input, select, textarea) { accent-color: var(--oq-primary); }
+    :is(input, textarea)::placeholder { color: var(--oq-muted); opacity: .85; }
+    :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible { outline: 3px solid var(--oq-gold-ink); outline-offset: 3px; }
+    button:disabled, input:disabled, select:disabled { cursor: not-allowed; }
+    ::selection { background: rgb(var(--oq-gold-200)); color: var(--oq-primary-dark); }
+    [x-cloak] { display: none !important; }
+}
+
+@layer components {
+    .oq-frieze { display: none; }
+    .oq-hero { background-image: linear-gradient(135deg, var(--oq-ivory), var(--oq-surface)); }
+    .oq-seal { color: var(--oq-gold-ink); }
+    .oq-rule { border-color: var(--oq-line); border-top: 1px solid var(--oq-line); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+@media (forced-colors: active) { :is(a, button, input, select, textarea):focus-visible { outline-color: Highlight; } }
+@media print {
+    html, body { background: #fff !important; color: #000 !important; }
+    .oq-frieze { display: none; }
+    .oq-receipt-header { background: #fff !important; color: #000 !important; border-bottom: 1px solid #000; }
+    body { background-image: none !important; }
+}
+
+:root :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 3px solid var(--oq-gold-ink);
+    outline-offset: 3px;
+}
+:is(.dark, .bg-gray-900, .bg-brand-950, .bg-primary) :focus-visible {
+    outline-color: rgb(var(--oq-gold-200));
+}
+.dark { color-scheme: dark; }
+
+@layer components {
+    .app-sidebar { width: 264px; background: #f8f9fa; border-right: 1px solid #e9ebf0; }
+    .app-sidebar.is-collapsed { width: 80px; }
+    .sidebar-link { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 10px; color: #53565a; font-size: 13px; font-weight: 500; text-align: left; transition: background-color 150ms, color 150ms; }
+    .sidebar-link:hover { background: #f1f3f5; color: #111827; }
+    .sidebar-link.is-active { background: #fff6f0; color: #ea580c; font-weight: 700; }
+    .sidebar-link.is-active:hover { background: #fff0e6; color: #c2410c; }
+    .sidebar-link i { width: 20px; flex-shrink: 0; text-align: center; font-size: 16px; transition: color 150ms; }
+    .sidebar-link.is-active i { color: #ea580c !important; }
+    .sidebar-link.is-active img.nav-icon-mono { filter: brightness(0) saturate(100%) invert(42%) sepia(93%) saturate(1638%) hue-rotate(359deg) brightness(96%) contrast(94%); opacity: 1 !important; }
+    .sidebar-link.is-active img.nav-icon-dashboard { filter: brightness(0) saturate(100%) invert(42%) sepia(93%) saturate(1638%) hue-rotate(359deg) brightness(96%) contrast(94%); opacity: 1 !important; }
+    .sidebar-link:not(.is-active) img.nav-icon-dashboard { filter: grayscale(100%) brightness(0.45); opacity: 0.8; }
+    .is-collapsed .sidebar-link { justify-content: center; padding-left: 0; padding-right: 0; }
+    .sidebar-heading { padding: 0 12px; margin: 18px 0 7px; color: #7f837e; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .sidebar-scroll { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+}
+
+@layer components {
+    .cafe-page-shell { display: flex; height: 100dvh; width: 100%; overflow: hidden; }
+    .cafe-page-content { flex: 1; min-width: 0; height: 100%; overflow: auto; position: relative; }
+    .app-sidebar { height: 100dvh; flex-shrink: 0; overflow: hidden; display: flex; flex-direction: column; }
+    .cafe-nav-mobile { display: none; }
+    .cafe-nav-backdrop { position: fixed; inset: 0; background: rgb(15 23 42 / .4); z-index: 115; }
+    @media (max-width: 767px) {
+        .app-sidebar { position: fixed; top: 0; bottom: 0; left: 0; z-index: 120; transform: translateX(-100%); transition: transform 180ms; }
+        .app-sidebar.is-mobile-open { transform: translateX(0); width: min(280px, 85vw); }
+        .cafe-nav-mobile { display: inline-flex; position: fixed; bottom: 18px; left: 16px; z-index: 114; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; border-radius: 12px; background: #1e5a7a; color: #fff; box-shadow: 0 3px 12px rgb(0 0 0 / .15); }
+        .cafe-page-content { padding-bottom: 72px; }
+    }
+}
+@layer components {
+    .cafe-operations {
+        --operation-accent: #c94d00;
+        --operation-accent-hover: #a63f00;
+        --operation-border: #e9ebf0;
+        --operation-muted: #53565a;
+    }
+
+    .cafe-operations #operation-content,
+    .cafe-operations [data-operation-anchor] { scroll-margin-top: 64px; }
+
+    .cafe-operation-panel {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        gap: 16px;
+        padding: clamp(16px, 2vw, 20px);
+        border: 1px solid var(--operation-border);
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgb(20 21 20 / .04);
+    }
+
+    .cafe-operation-panel h2 { color: #111827; font-size: 15px; font-weight: 700; }
+
+    .cafe-operation-input {
+        display: block;
+        width: 100%;
+        min-height: 44px;
+        margin-top: 6px;
+        padding-inline: 12px;
+        border: 1px solid #dcdfe4;
+        border-radius: 10px;
+        background-color: #fff;
+        color: #111827;
+        font-size: 13px;
+    }
+
+    .cafe-operation-input:is(select) { padding-right: 36px; }
+    .cafe-operation-input:focus {
+        border-color: var(--operation-accent);
+        box-shadow: 0 0 0 2px #ffeddc;
+    }
+
+    .cafe-operation-button {
+        display: inline-flex;
+        width: fit-content;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 650;
+        line-height: 1.25;
+        text-align: center;
+        transition: background-color 150ms, border-color 150ms, color 150ms;
+    }
+
+    .cafe-operation-button:not(:disabled) { cursor: pointer; }
+    .cafe-operation-button:disabled { opacity: .55; }
+    .cafe-operation-primary { background: var(--operation-accent); color: #fff; }
+    .cafe-operation-primary:hover:not(:disabled) { background: var(--operation-accent-hover); }
+    .cafe-operation-secondary { border-color: #dcdfe4; background: #fff; color: #111827; }
+    .cafe-operation-secondary:hover:not(:disabled) { background: #f8f9fa; }
+    .cafe-operation-link { width: fit-content; color: var(--operation-accent-hover); font-weight: 650; text-underline-offset: 3px; }
+    .cafe-operation-link:hover { text-decoration: underline; }
+
+    .cafe-operation-table { width: 100%; font-size: 13px; }
+    .cafe-operation-table thead { background: #f8f9fa; color: var(--operation-muted); font-size: 11px; letter-spacing: .035em; }
+    .cafe-operation-table :is(th, td) { padding: 10px 12px; }
+    .cafe-operation-table tbody tr { border-bottom: 1px solid #f0f1f3; }
+    .cafe-operation-table tbody tr:last-child { border-bottom: 0; }
+    .cafe-operation-table tbody tr:hover { background: #fafafa; }
+
+    .cafe-operation-status { display: inline-flex; width: fit-content; align-items: center; gap: 5px; border-radius: 999px; padding: 4px 9px; background: #f1f3f5; color: #53565a; font-size: 11px; font-weight: 700; line-height: 1.4; }
+    .cafe-operation-status::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .cafe-operation-status-pending { background: #fff0e6; color: #a63f00; }
+    .cafe-operation-status-success { background: #ecfdf5; color: #047857; }
+    .cafe-operation-status-danger { background: #fef2f2; color: #b91c1c; }
+    .cafe-operation-status-progress { background: #edf4f7; color: #164159; }
+
+    .cafe-operation-tab { border-color: transparent; color: var(--operation-muted); }
+    .cafe-operation-tab:hover { background: #f8f9fa; color: #111827; }
+    .cafe-operation-tab[aria-current='page'] { background: #fff0e6; border-color: #ffd2b8; color: var(--operation-accent-hover); }
+}
+
+@media print { .app-sidebar, .cafe-nav-mobile, .cafe-nav-backdrop { display: none !important; } .cafe-page-shell, .cafe-page-content { display: block; height: auto; overflow: visible; } }

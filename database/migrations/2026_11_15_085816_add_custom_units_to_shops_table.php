@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        if (Schema::hasTable('shops') && ! Schema::hasColumn('shops', 'custom_units')) {
+            Schema::table('shops', function (Blueprint $table) {
+                $table->json('custom_units')->nullable()->after('operating_hours');
+            });
+        }
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        if (Schema::hasTable('shops') && Schema::hasColumn('shops', 'custom_units')) {
+            Schema::table('shops', function (Blueprint $table) {
+                $table->dropColumn('custom_units');
+            });
+        }
+    }
+};

@@ -1,0 +1,82 @@
+<?php
+
+namespace App\Http\Requests;
+
+use App\Models\RawMaterial;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class SaveInventoryMaterialRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()?->shop_id && $this->user()->can('manage-inventory');
+    }
+
+    protected function prepareForValidation(): void
+    {
+        foreach (['current_stock', 'minimum_stock', 'cost_per_unit'] as $field) {
+            $value = $this->input($field);
+            if (is_float($value) && is_finite($value) && str_contains(strtolower((string) $value), 'e')) {
+                $decimal = sprintf('%.12F', $value);
+                if ((float) $decimal === $value) {
+                    $this->merge([$field => rtrim(rtrim($decimal, '0'), '.')]);
+                }
+            }
+        }
+        if (is_string($this->input('unit'))) {
+            $unit = trim($this->input('unit'));
+            $canonical = strtolower($unit);
+            $configUnits = config('inventory.units');
+            if ($this->user()?->shop) {
+                $configUnits = array_merge($configUnits, $this->user()->shop->custom_units ?? []);
+            }
+
+            if (array_key_exists($canonical, $configUnits)) {
+                $this->merge(['unit' => $canonical]);
+            } else {
+                $resolved = $unit;
+                foreach ($configUnits as $key => $label) {
+                    if (strtolower($label) === $canonical || str_starts_with($canonical, strtolower($key).' ')) {
+                        $resolved = $key;
+                        break;
+                    }
+                }
+                $this->merge(['unit' => $resolved]);
+            }
+        }
+    }
+
+    /** @return array<string, array<int, mixed>> */
+    public function rules(): array
+    {
+        $units = array_keys(config('inventory.units'));
+        if ($this->user()?->shop) {
+            $customUnits = $this->user()->shop->custom_units ?? [];
+            $units = array_merge($units, array_keys($customUnits));
+        }
+        if (is_numeric($this->input('id'))) {
+            $existing = RawMaterial::where('shop_id', $this->user()->shop_id)->find($this->input('id'));
+            if ($existing) {
+                $units[] = $existing->unit;
+            }
+        }
+        $units = array_unique($units);
+
+        return [
+            'id' => ['nullable', 'integer'],
+            'name' => ['required', 'string', 'max:255'], 'sku' => ['nullable', 'string', 'max:100'],
+            'unit' => ['required', 'string', Rule::in($units)],
+            'current_stock' => $this->filled('id') ? ['exclude'] : ['required', 'numeric', 'decimal:0,6', 'min:0', 'max:999999999.999999'],
+            'minimum_stock' => ['required', 'numeric', 'decimal:0,6', 'min:0', 'max:999999999.999999'],
+            'cost_per_unit' => ['required', 'numeric', 'decimal:0,6', 'min:0', 'max:999999999.999999'],
+            'shop_id' => ['prohibited'],
+        ];
+    }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return ['unit.in' => 'Pilih satuan stok yang tersedia.', 'unit.required' => 'Satuan stok wajib dipilih.'];
+    }
+}

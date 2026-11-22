@@ -1,0 +1,90 @@
+<?php
+
+namespace App\Services\Receipt;
+
+use App\Models\Order;
+use App\Services\BranchStorefrontResolver;
+use App\Services\MediaService;
+use Illuminate\Support\Facades\URL;
+
+class ReceiptService
+{
+    public function build(Order $order): ReceiptData
+    {
+        $order->loadMissing(['shop', 'branch', 'items.product']);
+
+        $shop = $order->shop;
+        if ($shop && $shop->branches_enabled && $order->branch) {
+            $shop = app(BranchStorefrontResolver::class)->apply($shop, $order->branch);
+        }
+
+        $shopData = [
+            'name' => $shop->name ?? 'OQARI',
+            'logo_url' => $shop->logo_url,
+            'address' => $shop->address ?: $order->branch?->address,
+            'phone' => $shop->whatsapp_number,
+            'email' => $shop->email,
+            'slogan' => $shop->slogan,
+            'primary_color' => $shop->primary_color ?? '#000000',
+            'receipt_header' => $shop->receipt_header,
+            'receipt_footer' => $shop->receipt_footer,
+        ];
+
+        $customerData = [
+            'name' => $order->customer_name ?? 'Guest',
+            'email' => $order->customer_email,
+            'phone' => $order->customer_phone,
+        ];
+
+        $itemsData = $order->items->map(function ($item) use ($order) {
+            $rawServingType = $item->serving_type ?? (str_contains((string) $item->notes, '[TAKEAWAY]') ? 'TAKEAWAY' : ($order->fulfillment_type ?? 'DINE_IN'));
+            $upper = strtoupper((string) $rawServingType);
+            $servingType = in_array($upper, ['TAKEAWAY', 'DELIVERY'], true) ? $upper : 'DINE_IN';
+
+            return [
+                'id' => $item->id,
+                'name' => $item->product_name ?? ($item->product ? $item->product->name : 'Item'),
+                'variant' => $item->variant_name ?? null,
+                'category_id' => $item->product?->category_id,
+                'category_name' => $item->product?->category_name ?? $item->product?->category?->name,
+                'quantity' => $item->quantity,
+                'price' => (float) ($item->unit_price ?? $item->price ?? 0),
+                'subtotal' => (float) $item->subtotal,
+                'modifiers' => is_array($item->modifiers) ? $item->modifiers : (is_string($item->modifiers) ? json_decode($item->modifiers, true) : []),
+                'notes' => $item->notes,
+                'serving_type' => $servingType,
+            ];
+        })->toArray();
+
+        $webUrl = URL::signedRoute('receipt.web', ['order' => $order->id]);
+        $pdfUrl = URL::signedRoute('receipt.pdf', ['order' => $order->id]);
+
+        $logoPath = app(MediaService::class)->emailSafeLogoPath($shop->logo_path);
+
+        return new ReceiptData(
+            shop: $shopData,
+            customer: $customerData,
+            items: $itemsData,
+            subtotal: (float) $order->subtotal,
+            discount: (float) $order->discount_amount,
+            tax: (float) $order->tax_amount,
+            grandTotal: (float) $order->grand_total,
+            paymentMethod: $order->payment_method,
+            paymentStatus: $order->payment_status,
+            orderStatus: $order->order_status,
+            orderNumber: 'OQR-'.$order->created_at->format('Ymd').'-'.str_pad($order->id, 4, '0', STR_PAD_LEFT),
+            date: $order->created_at->format('d M Y, H:i'),
+            webUrl: $webUrl,
+            pdfUrl: $pdfUrl,
+            logoPath: $logoPath,
+            fulfillmentType: $order->fulfillment_type ?? 'DINE_IN',
+            tableName: $order->table?->name,
+            amountPaid: (float) ($order->amount_paid ?? 0),
+            change: (float) ($order->change_amount ?? 0),
+            serviceCharge: (float) ($order->service_charge_amount ?? 0),
+            cashierName: (auth()->check() ? auth()->user()->name : null),
+            receiptSettings: $shop->receipt_settings ?? [],
+            discountReason: $order->voucher_code ? ($order->voucher_code.($order->discount_reason && $order->discount_reason !== $order->voucher_code ? ' ('.$order->discount_reason.')' : '')) : $order->discount_reason
+        );
+    }
+}

@@ -1,0 +1,74 @@
+# Laravel & PHP dependencies
+/vendor/
+/auth.json
+_ide_helper.php
+.phpactor.json
+.phpunit.result.cache
+/.phpunit.cache/
+
+# Node & Frontend build tools
+/node_modules/
+/public/hot
+/public/fonts-manifest.dev.json
+/public/storage
+# Keep /public/build tracked for direct Hostinger deployment without Node.js
+# /public/build/
+
+# Environment & Secrets
+.env
+.env.backup
+.env.production
+.env.staging
+.env.local
+/storage/*.key
+
+# Database (local SQLite)
+/database/*.sqlite
+/database/*.sqlite-shm
+/database/*.sqlite-wal
+
+# Laravel Storage runtime, logs, cache, sessions & test artifacts
+/storage/logs/*
+!/storage/logs/.gitignore
+/storage/pail/
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/testing/*
+!/storage/framework/testing/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/app/public/*
+!/storage/app/public/.gitignore
+/storage/app/private/*
+!/storage/app/private/.gitignore
+
+# Logs & OS junk
+*.log
+.DS_Store
+Thumbs.db
+Homestead.json
+Homestead.yaml
+
+# IDE & AI / Agent local caches
+/.codex/
+/.cursor/
+/.idea/
+/.nova/
+/.vscode/
+/.zed/
+/.playwright-mcp/
+/graphify-out/cache/
+
+# Local scratch / debug scripts
+/check.php
+/check_goodwill.php
+/check_products.php
+/fix-fixed.cjs
+/live_site.html
+/output.html
+/remove-md.cjs
+/render.php
+/update_ui.py
+/start-staging.ps1

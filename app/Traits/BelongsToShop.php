@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Traits;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
+
+trait BelongsToShop
+{
+    protected static function bootBelongsToShop()
+    {
+        static::addGlobalScope('shop', function (Builder $builder) {
+            if (Auth::check() && Auth::user()->shop_id) {
+                $builder->where(app($builder->getModel()::class)->getTable().'.shop_id', Auth::user()->shop_id);
+            }
+        });
+        static::creating(function ($model) {
+            if (Auth::check() && Auth::user()->shop_id && empty($model->shop_id)) {
+                $model->shop_id = Auth::user()->shop_id;
+            }
+        });
+    }
+}

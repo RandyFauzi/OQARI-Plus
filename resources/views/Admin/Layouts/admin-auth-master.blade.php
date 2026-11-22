@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <title>{{ config('app.name', 'Oqari') }} - @yield('title', 'Admin')</title>
+
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
+    <!-- View Transitions API (Modern Browsers) -->
+    <meta name="view-transition" content="same-origin" />
+    
+    <!-- Fallback CSS Animation -->
+    <style>
+        body {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+
+    <!-- Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-theme-head :shop="$shop ?? null" />
+</head>
+<body class="font-sans antialiased text-gray-900 bg-gray-100 min-h-screen">
+    <div class="oq-frieze fixed inset-x-0 top-0 z-[200] pointer-events-none" aria-hidden="true"></div>
+    @auth<div class="cafe-page-shell"><x-cafe-sidebar /><main class="cafe-page-content">@endauth
+    @yield('content')
+    @auth</main></div>@endauth
+</body>
+</html>

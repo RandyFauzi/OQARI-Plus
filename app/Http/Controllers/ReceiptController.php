@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Order;
+use App\Services\Receipt\ReceiptPdfService;
+use App\Services\Receipt\ReceiptService;
+use Illuminate\Http\Request;
+
+class ReceiptController extends Controller
+{
+    public function show(Request $request, Order $order)
+    {
+        if (! $request->hasValidSignature()) {
+            abort(403, 'Invalid or expired receipt link.');
+        }
+
+        $receiptData = app(ReceiptService::class)->build($order);
+        $shop = $order->shop;
+
+        return view('receipts.web', compact('receiptData', 'shop'));
+    }
+
+    public function downloadPdf(Request $request, Order $order)
+    {
+        if (! $request->hasValidSignature()) {
+            abort(403, 'Invalid or expired receipt link.');
+        }
+
+        $receiptData = app(ReceiptService::class)->build($order);
+
+        return app(ReceiptPdfService::class)->download($receiptData);
+    }
+}

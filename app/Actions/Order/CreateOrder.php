@@ -1,0 +1,102 @@
+<?php
+
+namespace App\Actions\Order;
+
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Shop;
+use App\Models\Table;
+use Exception;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * Persists a resolved cart (from CalculateCart + ApplyDiscount) as a new Order.
+ * Handles table resolution and order_items bulk creation inside a DB transaction.
+ * Does NOT handle payment — that is ProcessPayment's responsibility.
+ */
+class CreateOrder
+{
+    /**
+     * @param  array  $cart  Output of ApplyDiscount::execute()
+     * @param  array  $data  Customer data: table, name, payment_method, fulfillment_type
+     *
+     * @throws Exception
+     */
+    public function execute(Shop $shop, array $cart, array $data): Order
+    {
+        return DB::transaction(function () use ($shop, $cart, $data) {
+
+            // 1. Resolve or create table
+            $tableModel = null;
+            if (! empty($data['table'])) {
+                $tableModel = Table::where('shop_id', $shop->id)
+                    ->where('name', $data['table'])
+                    ->first()
+                    ?? Table::create(['shop_id' => $shop->id, 'name' => $data['table']]);
+            }
+
+            $netSales = $cart['net_sales'] ?? $cart['subtotal'];
+
+            // 3. Create Order header
+            $order = Order::create([
+                'shop_id' => $shop->id,
+                'table_id' => $tableModel?->id,
+                'customer_name' => $data['customer_name'] ?? null,
+                'customer_email' => $data['customer_email'] ?? null,
+                'customer_phone' => $data['customer_phone'] ?? null,
+                'payment_method' => $data['payment_method'],
+                'subtotal' => $cart['subtotal'],
+                'discount_amount' => $cart['discount_amount'] ?? 0,
+                'voucher_code' => $cart['voucher_code'] ?? ($data['voucher_code'] ?? null),
+                'discount_reason' => $cart['discount_reason'] ?? ($data['discount_reason'] ?? null),
+                'tax_amount' => 0,
+                'service_charge_amount' => 0,
+                'grand_total' => $netSales,
+                'total_cogs' => $cart['total_cogs'],
+                'order_status' => 'CONFIRMED',
+                'payment_status' => 'UNPAID',
+                'fulfillment_type' => $data['fulfillment_type'] ?? 'DINE_IN',
+            ]);
+
+            // 4. Bulk-insert order items
+            $now = now();
+            $hasPriceColumn = Schema::hasColumn('order_items', 'price');
+            $hasServingTypeColumn = Schema::hasColumn('order_items', 'serving_type');
+            $hasBatchNoColumn = Schema::hasColumn('order_items', 'batch_no');
+            $hasStatusColumn = Schema::hasColumn('order_items', 'status');
+            $rows = array_map(function ($item) use ($order, $now, $hasPriceColumn, $hasServingTypeColumn, $hasBatchNoColumn, $hasStatusColumn) {
+                $row = array_merge($item, [
+                    'order_id' => $order->id,
+                    'modifiers' => $item['modifiers'] ? json_encode($item['modifiers']) : null,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+
+                if ($hasPriceColumn && ! isset($row['price'])) {
+                    $row['price'] = $row['unit_price'] ?? 0;
+                }
+
+                if (! $hasServingTypeColumn) {
+                    unset($row['serving_type']);
+                }
+
+                if ($hasBatchNoColumn && ! isset($row['batch_no'])) {
+                    $row['batch_no'] = 1;
+                }
+
+                if ($hasStatusColumn && ! isset($row['status'])) {
+                    $row['status'] = 'new';
+                }
+
+                return $row;
+            }, $cart['items']);
+
+            OrderItem::insert($rows);
+
+            $order->load('items');
+
+            return $order;
+        });
+    }
+}
