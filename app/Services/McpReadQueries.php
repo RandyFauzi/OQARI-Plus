@@ -42,7 +42,9 @@ class McpReadQueries
             'business' => $connection->shop?->name,
             'timezone' => config('attendance.timezone'),
             'read_only' => true,
-            'abilities' => array_values(array_intersect($connection->abilities, $this->access->abilities($connection->user, $connection->role))),
+            'abilities' => $connection->oauth_client_id !== null
+                ? array_values(array_intersect($connection->abilities, $this->access->abilities($connection->user, $connection->role)))
+                : $this->access->abilities($connection->user, $connection->role),
             'branches' => $this->branchList($connection)['branches'],
         ];
     }

@@ -60,7 +60,15 @@ class McpAccess
 
     public function allows(McpConnection $connection, string $ability): bool
     {
-        return in_array($ability, $connection->abilities, true)
-            && in_array($ability, $this->abilities($connection->user, $connection->role), true);
+        $roleAbilities = $this->abilities($connection->user, $connection->role);
+        if (! in_array($ability, $roleAbilities, true)) {
+            return false;
+        }
+
+        if ($connection->oauth_client_id !== null) {
+            return in_array($ability, $connection->abilities, true);
+        }
+
+        return true;
     }
 }
