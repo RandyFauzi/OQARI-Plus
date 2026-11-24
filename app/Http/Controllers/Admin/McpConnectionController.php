@@ -66,7 +66,7 @@ class McpConnectionController extends Controller
             }
             $data = [
                 'name' => $clients[$options['client']]['label'],
-                'abilities' => array_slice($allowedAbilities, 0, 1),
+                'abilities' => $allowedAbilities,
                 'branch_ids' => $allowedBranches,
             ];
         } else {

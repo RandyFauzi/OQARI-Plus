@@ -245,7 +245,9 @@
                                 <i class="fas fa-bolt text-[13px]" aria-hidden="true"></i>
                             </span>
                             <div>
-                                <p class="text-[14px] font-bold text-[#111827]">{{ config("oqari_mcp.abilities.$defaultAbility.label") }}</p>
+                                <p class="text-[14px] font-bold text-[#111827]">
+                                    {{ collect($abilities)->map(fn (string $a) => config("oqari_mcp.abilities.$a.label", $a))->implode(' · ') }}
+                                </p>
                                 <p class="mt-0.5 text-[12px] text-[#53565a]">
                                     @if($hasBranches)
                                         {{ $branches->count() }} outlet yang dapat Anda akses ·

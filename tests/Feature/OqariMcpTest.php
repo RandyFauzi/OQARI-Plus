@@ -145,7 +145,7 @@ class OqariMcpTest extends TestCase
         $connection = McpConnection::where('user_id', $manager->id)->sole();
         $this->assertSame('Claude Code', $connection->name);
         $this->assertSame([$assigned->id], $connection->branch_ids);
-        $this->assertSame(['sales'], $connection->abilities);
+        $this->assertSame(['sales', 'inventory'], $connection->abilities);
         $page = $this->get($setup)->assertSee('Kunci Claude Code siap disalin')->assertSee('Bearer ${OQARI_MCP_TOKEN}');
         $token = $page->viewData('newToken');
 
@@ -176,7 +176,7 @@ class OqariMcpTest extends TestCase
         $connection = McpConnection::where('user_id', $owner->id)->sole();
         $this->assertEqualsCanonicalizing([$first->id, $second->id], $connection->branch_ids);
         $this->assertNotContains($foreign->id, $connection->branch_ids);
-        $this->assertSame(['sales'], $connection->abilities);
+        $this->assertSame(['sales', 'inventory', 'operations'], $connection->abilities);
 
         $this->post(route('admin.integrations.mcp.store'), ['mode' => 'quick', 'client' => 'unsupported'])
             ->assertSessionHasErrors(['client']);
