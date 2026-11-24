@@ -23,6 +23,8 @@ abstract class ReadTool extends Tool
 
     private const Periods = ['today', 'yesterday', 'last_7_days', 'last_30_days'];
 
+    private const PaymentStatuses = ['PAID', 'UNPAID', 'PENDING', 'FAILED', 'REFUNDED'];
+
     public function annotations(): array
     {
         return [...parent::annotations(), 'readOnlyHint' => true];
@@ -50,6 +52,8 @@ abstract class ReadTool extends Tool
             'period' => $schema->string()->enum(self::Periods)->description('Default hari ini. Untuk tanggal tertentu gunakan date_from dan date_to.'),
             'date_from' => $schema->string()->description('Tanggal awal inklusif dalam format YYYY-MM-DD.'),
             'date_to' => $schema->string()->description('Tanggal akhir inklusif dalam format YYYY-MM-DD.'),
+            'search' => $schema->string()->description('Kata kunci pencarian nama atau kategori.'),
+            'payment_status' => $schema->string()->enum(self::PaymentStatuses)->description('Filter status pembayaran.'),
             'limit' => $schema->integer()->min(1)->max(config('oqari_mcp.max_page_size')),
             'page' => $schema->integer()->min(1)->max(1000),
         ];
@@ -82,9 +86,19 @@ abstract class ReadTool extends Tool
                 'context' => $queries->context($connection),
                 'branches' => $queries->branchList($connection),
                 'snapshot', 'summary', 'compare', 'products' => $queries->sales($connection, $arguments, static::Operation),
+                'catalog_products' => $queries->catalogProducts($connection, $arguments),
+                'sales_breakdown' => $queries->salesBreakdown($connection, $arguments),
+                'orders' => $queries->orders($connection, $arguments),
+                'vouchers' => $queries->vouchers($connection, $arguments),
                 'low_stock' => $queries->lowStock($connection, $arguments),
+                'raw_materials' => $queries->rawMaterials($connection, $arguments),
                 'transfers' => $queries->transfers($connection, $arguments),
+                'stock_mutations' => $queries->stockMutations($connection, $arguments),
+                'purchase_orders' => $queries->purchaseOrders($connection, $arguments),
                 'operations' => $queries->operations($connection, $arguments),
+                'cash_sessions' => $queries->cashSessions($connection, $arguments),
+                'attendance' => $queries->attendance($connection, $arguments),
+                'production_orders' => $queries->productionOrders($connection, $arguments),
                 'platform' => $queries->platform(),
             };
             $outcome = 'success';
@@ -121,11 +135,18 @@ abstract class ReadTool extends Tool
             'date_to' => ['required_with:date_from', 'date_format:Y-m-d'],
         ];
         $limit = ['limit' => ['sometimes', 'integer', 'min:1', 'max:'.config('oqari_mcp.max_page_size')]];
+        $page = ['page' => ['sometimes', 'integer', 'min:1', 'max:1000']];
+        $search = ['search' => ['sometimes', 'string', 'max:100']];
+        $paymentStatus = ['payment_status' => ['sometimes', 'in:'.implode(',', self::PaymentStatuses)]];
 
         return match (static::Operation) {
             'snapshot', 'products' => $branch + $dates + $limit,
-            'compare', 'summary', 'operations' => $branch + $dates,
-            'low_stock', 'transfers' => $branch + $limit + ['page' => ['sometimes', 'integer', 'min:1', 'max:1000']],
+            'compare', 'summary', 'operations', 'sales_breakdown', 'attendance' => $branch + $dates,
+            'low_stock', 'transfers', 'vouchers' => $branch + $limit + $page,
+            'catalog_products', 'raw_materials' => $branch + $search + $limit + $page,
+            'orders' => $branch + $dates + $paymentStatus + $limit + $page,
+            'stock_mutations', 'cash_sessions', 'production_orders' => $branch + $dates + $limit + $page,
+            'purchase_orders' => $dates + $limit + $page,
             default => [],
         };
     }

@@ -6,6 +6,7 @@ use App\Actions\Branch\ManageBranches;
 use App\Models\Branch;
 use App\Models\InventoryLocation;
 use App\Models\McpConnection;
+use App\Models\Product;
 use App\Models\RawMaterial;
 use App\Models\Shop;
 use App\Models\StockTransfer;
@@ -305,7 +306,7 @@ class OqariMcpTest extends TestCase
         app(ManageBranches::class)->assign($branch, $manager, 'manager');
         $managerToken = $this->token($manager, [$branch->id], ['sales', 'inventory']);
 
-        foreach ([$ownerToken => 9, $platformToken => 2, $managerToken => 8] as $token => $expectedCount) {
+        foreach ([$ownerToken => 19, $platformToken => 2, $managerToken => 15] as $token => $expectedCount) {
             $tools = $this->rpc($token, 'tools/list')->assertOk()->json('result.tools');
             $this->assertCount($expectedCount, $tools);
             foreach ($tools as $tool) {
@@ -450,6 +451,35 @@ class OqariMcpTest extends TestCase
 
         $this->postJson(route('admin.integrations.mcp.reveal', $connection->id))
             ->assertNotFound();
+    }
+
+    public function test_catalog_and_analytics_tools_return_accurate_data(): void
+    {
+        [$owner, $branch] = $this->business();
+        Product::factory()->create(['shop_id' => $owner->shop_id, 'name' => 'Burger Klasik', 'price' => 35000]);
+        Product::factory()->create(['shop_id' => $owner->shop_id, 'name' => 'Es Teh', 'price' => 8000]);
+        $today = CarbonImmutable::today(config('attendance.timezone'));
+        $this->customerOrder($branch, $today, 35000, 'Burger Klasik', 1);
+
+        $token = $this->token($owner, [$branch->id], ['sales']);
+
+        $this->callTool($token, 'oqari_list_products', ['search' => 'Burger'])
+            ->assertOk()
+            ->assertJsonPath('result.structuredContent.data.total_products', 1)
+            ->assertJsonPath('result.structuredContent.data.items.0.name', 'Burger Klasik');
+
+        $this->callTool($token, 'oqari_list_products')
+            ->assertOk()
+            ->assertJsonPath('result.structuredContent.data.total_products', 2);
+
+        $this->callTool($token, 'oqari_get_sales_breakdown', ['branch_id' => $branch->id])
+            ->assertOk()
+            ->assertJsonPath('result.structuredContent.data.by_payment_method.0.payment_method', 'CASH')
+            ->assertJsonPath('result.structuredContent.data.by_payment_method.0.paid_orders', 1);
+
+        $this->callTool($token, 'oqari_list_orders', ['branch_id' => $branch->id, 'payment_status' => 'PAID'])
+            ->assertOk()
+            ->assertJsonPath('result.structuredContent.data.items.0.grand_total', '35000.00');
     }
 
     private function callTool(string $token, string $name, array $arguments = [], bool $modern = false): TestResponse
