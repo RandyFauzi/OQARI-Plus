@@ -79,7 +79,7 @@ abstract class ReadTool extends Tool
         try {
             $rules = $this->rules();
             if (array_diff_key($request->all(), $rules) !== []) {
-                throw ValidationException::withMessages(['arguments' => 'Argumen tidak didukung. Gunakan parameter dari tools/list.']);
+                throw ValidationException::withMessages(['arguments' => 'Parameter yang dikirim tidak sesuai dengan data yang tersedia.']);
             }
             $arguments = Validator::make($request->all(), $rules)->validate();
             $data = match (static::Operation) {

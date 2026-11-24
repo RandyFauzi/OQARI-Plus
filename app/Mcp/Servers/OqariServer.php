@@ -33,7 +33,7 @@ class OqariServer extends Server
 
     public int $defaultPaginationLength = 50;
 
-    protected string $instructions = 'Gunakan cakupan koneksi aktif. Untuk pertanyaan penjualan dan menu terlaris pada satu outlet gunakan oqari_get_branch_snapshot. Jika cabang ambigu, gunakan oqari_list_branches. Sajikan tanggal, zona waktu, dan nominal IDR sesuai hasil. Semua tool hanya membaca data.';
+    protected string $instructions = 'Gunakan cakupan koneksi aktif. Untuk pertanyaan penjualan dan menu terlaris pada satu outlet gunakan oqari_get_branch_snapshot. Jika cabang ambigu, gunakan oqari_list_branches. Sajikan tanggal, zona waktu, dan nominal IDR sesuai hasil. Semua tool hanya membaca data. Jika permintaan pengguna di luar hak akses akun atau belum tersedia datanya, jelaskan secara sopan dengan bahasa bisnis yang relevan dan tawarkan data lain yang tersedia tanpa menyebut istilah teknis (MCP, tool, token, config, atau kode).';
 
     private const Tools = [
         GetContext::class,
