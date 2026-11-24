@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Saas\BillingWebhookController;
 use App\Http\Middleware\EnsureAccountIsActive;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -44,3 +45,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureAccountIsActive::class])-
         // e.g., Route::post('/webhooks/gofood/orders', [IntegrationController::class, 'gofood']);
     });
 });
+
+// SaaS Billing Webhooks (dormant: returns 404 while SAAS_BILLING_ENABLED=false)
+Route::post('/saas/webhooks/{gateway}', BillingWebhookController::class)
+    ->whereIn('gateway', ['midtrans', 'mayar'])
+    ->middleware('throttle:60,1')
+    ->name('saas.webhooks');

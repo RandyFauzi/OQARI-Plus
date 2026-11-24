@@ -106,7 +106,10 @@ class BranchPublicUrlAndRealtimeTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('order.branch_id', $branchB->id)
-            ->assertJsonPath('order.grand_total', 44000);
+            ->assertJsonPath('order.grand_total', 44000)
+            ->assertJsonPath('order.payment_status', 'PAID')
+            ->assertJsonPath('order.order_status', 'CONFIRMED')
+            ->assertJsonPath('order.amount_paid', 44000);
 
         Event::assertDispatched(OrderCreated::class, function (OrderCreated $event) use ($shop, $branchB): bool {
             $channels = array_map(fn ($ch) => $ch->name, $event->broadcastOn());

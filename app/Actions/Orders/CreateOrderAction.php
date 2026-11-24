@@ -147,6 +147,8 @@ class CreateOrderAction
                 }
             }
 
+            $grandTotal = max(0, $total - $discountAmount);
+
             // 4. Create the Order Parent
             $order = Order::create([
                 'shop_id' => $shop->id,
@@ -160,10 +162,13 @@ class CreateOrderAction
                 'discount_amount' => $discountAmount,
                 'voucher_code' => $voucher?->code,
                 'discount_reason' => $voucher?->name,
-                'grand_total' => max(0, $total - $discountAmount),
+                'grand_total' => $grandTotal,
+                'amount_paid' => $grandTotal,
+                'change_amount' => 0,
                 'total_cogs' => $totalCogs,
                 'order_status' => 'CONFIRMED',
-                'payment_status' => 'UNPAID',
+                'payment_status' => 'PAID',
+                'paid_at' => now(),
                 'fulfillment_type' => $fulfillmentType,
             ]);
 
