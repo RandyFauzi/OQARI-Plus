@@ -482,6 +482,25 @@ class OqariMcpTest extends TestCase
             ->assertJsonPath('result.structuredContent.data.items.0.grand_total', '35000.00');
     }
 
+    public function test_chatgpt_and_gemini_setup_tutorials_render_cleanly(): void
+    {
+        [$owner] = $this->business();
+
+        $this->actingAs($owner)
+            ->get(route('admin.integrations.mcp', ['client' => 'chatgpt']))
+            ->assertOk()
+            ->assertSee('Hubungkan ChatGPT')
+            ->assertSee('Dukungan Paket ChatGPT untuk Custom MCP')
+            ->assertSee('Add custom MCP server');
+
+        $this->actingAs($owner)
+            ->get(route('admin.integrations.mcp', ['client' => 'gemini']))
+            ->assertOk()
+            ->assertSee('Hubungkan Gemini')
+            ->assertSee('Cara pasang di Gemini Web (gemini.google.com)')
+            ->assertSee('Add a custom app');
+    }
+
     private function callTool(string $token, string $name, array $arguments = [], bool $modern = false): TestResponse
     {
         return $this->rpc($token, 'tools/call', ['name' => $name, 'arguments' => (object) $arguments], $modern);

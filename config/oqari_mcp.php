@@ -14,6 +14,8 @@ return [
     'clients' => [
         'codex' => ['label' => 'Codex', 'icon' => 'fa-terminal'],
         'claude-code' => ['label' => 'Claude Code', 'icon' => 'fa-code'],
+        'chatgpt' => ['label' => 'ChatGPT', 'icon' => 'fa-comments'],
+        'gemini' => ['label' => 'Gemini', 'icon' => 'fa-gem'],
         'other' => ['label' => 'Aplikasi lain', 'icon' => 'fa-plug'],
     ],
     'abilities' => [

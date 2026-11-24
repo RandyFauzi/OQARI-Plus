@@ -274,7 +274,7 @@
 
                 @if($canConnect)
                     {{-- Step-by-step Setup Accordion --}}
-                    <details class="group rounded-[12px] border border-[#e9ebf0] bg-white transition open:border-[#ffd2b8]" @if($newToken) open @endif>
+                    <details class="group rounded-[12px] border border-[#e9ebf0] bg-white transition open:border-[#ffd2b8]" @if($newToken || in_array($client, ['chatgpt', 'gemini'], true)) open @endif>
                         <summary class="flex min-h-[46px] cursor-pointer list-none items-center justify-between gap-3 rounded-[12px] px-4 py-3 text-[13px] font-semibold text-[#111827] transition hover:bg-[#fafbfc]">
                             <span class="flex items-center gap-2.5">
                                 <span class="flex h-6 w-6 items-center justify-center rounded-md bg-[#fff6f0] text-[#df5826]">
@@ -293,6 +293,142 @@
                                     <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
                                     <span x-text="copied === 'command' ? 'Perintah tersalin' : 'Salin perintah'">Salin perintah</span>
                                 </button>
+                            @elseif($client === 'chatgpt')
+                                {{-- Ringkasan Konfigurasi MCP OQARI --}}
+                                <div class="space-y-3 rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Custom MCP Server</p>
+                                            <p class="text-[12px] text-[#53565a]">Salin URL ini untuk dipasang di menu Apps / Plugins ChatGPT.</p>
+                                        </div>
+                                        <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-1 text-[11px] font-semibold text-[#df5826]">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-[#df5826]" aria-hidden="true"></span>
+                                            <span>Streamable HTTP</span>
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-col gap-2 sm:flex-row">
+                                        <label class="sr-only" for="mcp-endpoint-chatgpt">URL server MCP</label>
+                                        <input id="mcp-endpoint-chatgpt" x-ref="endpoint" class="{{ $field }} flex-1 bg-white font-mono text-[12px]" readonly value="{{ $endpoint }}">
+                                        <button type="button" class="{{ $secondaryButton }} shrink-0" @click="copy('endpoint', 'URL')">
+                                            <i class="fas text-[12px]" :class="copied === 'endpoint' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'endpoint' ? 'URL tersalin' : 'Salin URL'">Salin URL</span>
+                                        </button>
+                                    </div>
+                                    <div class="grid gap-2 text-[12px] sm:grid-cols-3">
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Autentikasi</p>
+                                            <p class="font-semibold text-[#111827]">OAuth / Bearer Token</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Hak Akses</p>
+                                            <p class="font-semibold text-[#111827]">Akses baca (Read-only)</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Cakupan & Masa Berlaku</p>
+                                            <p class="font-semibold text-[#111827]">{{ $hasBranches ? $branches->count().' outlet' : 'Outlet utama' }} · {{ config('oqari_mcp.token_days') }} hari</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Dukungan Paket ChatGPT --}}
+                                <div class="rounded-[12px] border border-[#e9ebf0] bg-white p-4">
+                                    <p class="mb-2.5 text-[12px] font-bold text-[#111827]">Dukungan Paket ChatGPT untuk Custom MCP</p>
+                                    <div class="grid gap-2 text-[12px] sm:grid-cols-2">
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Free</span>
+                                            <span class="rounded-full bg-gray-200 px-2 py-0.5 text-[11px] font-semibold text-gray-700">Tidak mendukung</span>
+                                        </div>
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Plus</span>
+                                            <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">Terbatas (tergantung rollout)</span>
+                                        </div>
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Pro</span>
+                                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">Mendukung (Read / Fetch)</span>
+                                        </div>
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Business / Enterprise / Edu</span>
+                                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">Mendukung penuh</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Langkah Pemasangan ChatGPT --}}
+                                <div class="space-y-2">
+                                    <p class="text-[12px] font-bold text-[#111827]">Langkah menghubungkan di ChatGPT Web</p>
+                                    <ol class="list-decimal space-y-1.5 pl-5 text-[13px] text-[#53565a]">
+                                        <li>Buka <strong class="text-[#111827]">chatgpt.com</strong> lalu masuk ke menu <strong class="text-[#111827]">Apps / Plugins</strong>.</li>
+                                        <li>Klik tombol <strong class="text-[#111827]">+</strong> dan pilih <strong class="text-[#111827]">Add custom MCP server</strong>.</li>
+                                        <li>Masukkan nama <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI Advance</code> dan tempel <strong class="text-[#111827]">Server URL</strong> di atas.</li>
+                                        <li>Pilih metode autentikasi yang tersedia (<strong class="text-[#111827]">OAuth</strong> atau <strong class="text-[#111827]">Bearer Token</strong> dengan kunci akses OQARI).</li>
+                                        <li>Centang persetujuan lalu klik <strong class="text-[#111827]">Create as a plugin</strong>.</li>
+                                        <li>Setelah terhubung, uji dengan memanggil <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">oqari_get_context</code> atau pertanyaan contoh di bawah.</li>
+                                    </ol>
+                                </div>
+                            @elseif($client === 'gemini')
+                                {{-- Ringkasan Konfigurasi MCP OQARI --}}
+                                <div class="space-y-3 rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Custom App (MCP)</p>
+                                            <p class="text-[12px] text-[#53565a]">Mendukung Gemini Web (tersinkron ke aplikasi mobile), Gemini CLI, dan Antigravity.</p>
+                                        </div>
+                                        <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-1 text-[11px] font-semibold text-[#df5826]">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-[#df5826]" aria-hidden="true"></span>
+                                            <span>Streamable HTTP</span>
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-col gap-2 sm:flex-row">
+                                        <label class="sr-only" for="mcp-endpoint-gemini">URL server MCP</label>
+                                        <input id="mcp-endpoint-gemini" x-ref="endpoint" class="{{ $field }} flex-1 bg-white font-mono text-[12px]" readonly value="{{ $endpoint }}">
+                                        <button type="button" class="{{ $secondaryButton }} shrink-0" @click="copy('endpoint', 'URL')">
+                                            <i class="fas text-[12px]" :class="copied === 'endpoint' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'endpoint' ? 'URL tersalin' : 'Salin URL'">Salin URL</span>
+                                        </button>
+                                    </div>
+                                    <div class="grid gap-2 text-[12px] sm:grid-cols-3">
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Autentikasi</p>
+                                            <p class="font-semibold text-[#111827]">OAuth (Web) · Bearer (CLI)</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Hak Akses</p>
+                                            <p class="font-semibold text-[#111827]">Akses baca (Read-only)</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Cakupan & Masa Berlaku</p>
+                                            <p class="font-semibold text-[#111827]">{{ $hasBranches ? $branches->count().' outlet' : 'Outlet utama' }} · {{ config('oqari_mcp.token_days') }} hari</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Langkah Pemasangan Gemini Web --}}
+                                <div class="space-y-2">
+                                    <p class="text-[12px] font-bold text-[#111827]">Cara pasang di Gemini Web (gemini.google.com)</p>
+                                    <ol class="list-decimal space-y-1.5 pl-5 text-[13px] text-[#53565a]">
+                                        <li>Buka <strong class="text-[#111827]">gemini.google.com</strong> → klik <strong class="text-[#111827]">Settings</strong> di pojok kiri bawah → pilih <strong class="text-[#111827]">Connected Apps</strong>.</li>
+                                        <li>Pada bagian <strong class="text-[#111827]">Custom apps</strong>, klik <strong class="text-[#111827]">Add a custom app</strong>.</li>
+                                        <li>Masukkan nama <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI Advance</code> dan tempel <strong class="text-[#111827]">Server URL</strong> di atas.</li>
+                                        <li>Selesaikan autentikasi (atau buka <strong class="text-[#111827]">Advanced features</strong> jika diminta kredensial OAuth), lalu klik <strong class="text-[#111827]">Next</strong>.</li>
+                                        <li>Panggil di chat dengan mengetik <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">@OQARI Advance</code> atau langsung ajukan pertanyaan contoh di bawah.</li>
+                                    </ol>
+                                </div>
+
+                                {{-- Konfigurasi Gemini CLI / Antigravity --}}
+                                <details class="group/cli rounded-[10px] border border-[#e9ebf0] bg-[#f8f9fa] px-3.5">
+                                    <summary class="flex min-h-[42px] cursor-pointer list-none items-center justify-between py-2.5 text-[12px] font-semibold text-[#111827]">
+                                        <span>Untuk Gemini CLI atau Antigravity (pakai Bearer Token)</span>
+                                        <i class="fas fa-chevron-down text-[10px] text-[#7f837e] transition-transform group-open/cli:rotate-180" aria-hidden="true"></i>
+                                    </summary>
+                                    <div class="space-y-2.5 pb-3.5">
+                                        <p class="text-[12px] text-[#53565a]">Tambahkan konfigurasi berikut ke <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">mcp_config.json</code> (Antigravity) atau <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">.gemini/settings.json</code> (Gemini CLI), lalu ganti <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#c94d00]">${OQARI_MCP_TOKEN}</code> dengan kunci akses Anda:</p>
+                                        <textarea id="mcp-gemini-config" x-ref="command" class="{{ $field }} bg-white font-mono text-[12px]" readonly rows="8">{{ $claudeConfig }}</textarea>
+                                        <button type="button" class="{{ $secondaryButton }}" @click="copy('command', 'Konfigurasi')">
+                                            <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
+                                        </button>
+                                    </div>
+                                </details>
                             @elseif($client === 'claude-code')
                                 <p class="text-[13px] text-[#53565a]">Simpan kunci sebagai variabel lingkungan <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI_MCP_TOKEN</code>. Tambahkan entri ini ke <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px]">.mcp.json</code> di folder proyek, lalu buka Claude Code dan cek <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px]">/mcp</code>.</p>
                                 <label class="sr-only" for="mcp-config">Konfigurasi Claude Code</label>
@@ -301,6 +437,142 @@
                                     <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
                                     <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
                                 </button>
+                            @elseif($client === 'chatgpt')
+                                {{-- Ringkasan Konfigurasi MCP OQARI --}}
+                                <div class="space-y-3 rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Custom MCP Server</p>
+                                            <p class="text-[12px] text-[#53565a]">Salin URL ini untuk dipasang di menu Apps / Plugins ChatGPT.</p>
+                                        </div>
+                                        <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-1 text-[11px] font-semibold text-[#df5826]">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-[#df5826]" aria-hidden="true"></span>
+                                            <span>Streamable HTTP</span>
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-col gap-2 sm:flex-row">
+                                        <label class="sr-only" for="mcp-endpoint-chatgpt">URL server MCP</label>
+                                        <input id="mcp-endpoint-chatgpt" x-ref="endpoint" class="{{ $field }} flex-1 bg-white font-mono text-[12px]" readonly value="{{ $endpoint }}">
+                                        <button type="button" class="{{ $secondaryButton }} shrink-0" @click="copy('endpoint', 'URL')">
+                                            <i class="fas text-[12px]" :class="copied === 'endpoint' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'endpoint' ? 'URL tersalin' : 'Salin URL'">Salin URL</span>
+                                        </button>
+                                    </div>
+                                    <div class="grid gap-2 text-[12px] sm:grid-cols-3">
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Autentikasi</p>
+                                            <p class="font-semibold text-[#111827]">OAuth / Bearer Token</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Hak Akses</p>
+                                            <p class="font-semibold text-[#111827]">Akses baca (Read-only)</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Cakupan & Masa Berlaku</p>
+                                            <p class="font-semibold text-[#111827]">{{ $hasBranches ? $branches->count().' outlet' : 'Outlet utama' }} · {{ config('oqari_mcp.token_days') }} hari</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Dukungan Paket ChatGPT --}}
+                                <div class="rounded-[12px] border border-[#e9ebf0] bg-white p-4">
+                                    <p class="mb-2.5 text-[12px] font-bold text-[#111827]">Dukungan Paket ChatGPT untuk Custom MCP</p>
+                                    <div class="grid gap-2 text-[12px] sm:grid-cols-2">
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Free</span>
+                                            <span class="rounded-full bg-gray-200 px-2 py-0.5 text-[11px] font-semibold text-gray-700">Tidak mendukung</span>
+                                        </div>
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Plus</span>
+                                            <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">Terbatas (tergantung rollout)</span>
+                                        </div>
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Pro</span>
+                                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">Mendukung (Read / Fetch)</span>
+                                        </div>
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Business / Enterprise / Edu</span>
+                                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">Mendukung penuh</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Langkah Pemasangan ChatGPT --}}
+                                <div class="space-y-2">
+                                    <p class="text-[12px] font-bold text-[#111827]">Langkah menghubungkan di ChatGPT Web</p>
+                                    <ol class="list-decimal space-y-1.5 pl-5 text-[13px] text-[#53565a]">
+                                        <li>Buka <strong class="text-[#111827]">chatgpt.com</strong> lalu masuk ke menu <strong class="text-[#111827]">Apps / Plugins</strong>.</li>
+                                        <li>Klik tombol <strong class="text-[#111827]">+</strong> dan pilih <strong class="text-[#111827]">Add custom MCP server</strong>.</li>
+                                        <li>Masukkan nama <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI Advance</code> dan tempel <strong class="text-[#111827]">Server URL</strong> di atas.</li>
+                                        <li>Pilih metode autentikasi yang tersedia (<strong class="text-[#111827]">OAuth</strong> atau <strong class="text-[#111827]">Bearer Token</strong> dengan kunci akses OQARI).</li>
+                                        <li>Centang persetujuan lalu klik <strong class="text-[#111827]">Create as a plugin</strong>.</li>
+                                        <li>Setelah terhubung, uji dengan memanggil <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">oqari_get_context</code> atau pertanyaan contoh di bawah.</li>
+                                    </ol>
+                                </div>
+                            @elseif($client === 'gemini')
+                                {{-- Ringkasan Konfigurasi MCP OQARI --}}
+                                <div class="space-y-3 rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Custom App (MCP)</p>
+                                            <p class="text-[12px] text-[#53565a]">Mendukung Gemini Web (tersinkron ke aplikasi mobile), Gemini CLI, dan Antigravity.</p>
+                                        </div>
+                                        <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-1 text-[11px] font-semibold text-[#df5826]">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-[#df5826]" aria-hidden="true"></span>
+                                            <span>Streamable HTTP</span>
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-col gap-2 sm:flex-row">
+                                        <label class="sr-only" for="mcp-endpoint-gemini">URL server MCP</label>
+                                        <input id="mcp-endpoint-gemini" x-ref="endpoint" class="{{ $field }} flex-1 bg-white font-mono text-[12px]" readonly value="{{ $endpoint }}">
+                                        <button type="button" class="{{ $secondaryButton }} shrink-0" @click="copy('endpoint', 'URL')">
+                                            <i class="fas text-[12px]" :class="copied === 'endpoint' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'endpoint' ? 'URL tersalin' : 'Salin URL'">Salin URL</span>
+                                        </button>
+                                    </div>
+                                    <div class="grid gap-2 text-[12px] sm:grid-cols-3">
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Autentikasi</p>
+                                            <p class="font-semibold text-[#111827]">OAuth (Web) · Bearer (CLI)</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Hak Akses</p>
+                                            <p class="font-semibold text-[#111827]">Akses baca (Read-only)</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Cakupan & Masa Berlaku</p>
+                                            <p class="font-semibold text-[#111827]">{{ $hasBranches ? $branches->count().' outlet' : 'Outlet utama' }} · {{ config('oqari_mcp.token_days') }} hari</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Langkah Pemasangan Gemini Web --}}
+                                <div class="space-y-2">
+                                    <p class="text-[12px] font-bold text-[#111827]">Cara pasang di Gemini Web (gemini.google.com)</p>
+                                    <ol class="list-decimal space-y-1.5 pl-5 text-[13px] text-[#53565a]">
+                                        <li>Buka <strong class="text-[#111827]">gemini.google.com</strong> → klik <strong class="text-[#111827]">Settings</strong> di pojok kiri bawah → pilih <strong class="text-[#111827]">Connected Apps</strong>.</li>
+                                        <li>Pada bagian <strong class="text-[#111827]">Custom apps</strong>, klik <strong class="text-[#111827]">Add a custom app</strong>.</li>
+                                        <li>Masukkan nama <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI Advance</code> dan tempel <strong class="text-[#111827]">Server URL</strong> di atas.</li>
+                                        <li>Selesaikan autentikasi (atau buka <strong class="text-[#111827]">Advanced features</strong> jika diminta kredensial OAuth), lalu klik <strong class="text-[#111827]">Next</strong>.</li>
+                                        <li>Panggil di chat dengan mengetik <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">@OQARI Advance</code> atau langsung ajukan pertanyaan contoh di bawah.</li>
+                                    </ol>
+                                </div>
+
+                                {{-- Konfigurasi Gemini CLI / Antigravity --}}
+                                <details class="group/cli rounded-[10px] border border-[#e9ebf0] bg-[#f8f9fa] px-3.5">
+                                    <summary class="flex min-h-[42px] cursor-pointer list-none items-center justify-between py-2.5 text-[12px] font-semibold text-[#111827]">
+                                        <span>Untuk Gemini CLI atau Antigravity (pakai Bearer Token)</span>
+                                        <i class="fas fa-chevron-down text-[10px] text-[#7f837e] transition-transform group-open/cli:rotate-180" aria-hidden="true"></i>
+                                    </summary>
+                                    <div class="space-y-2.5 pb-3.5">
+                                        <p class="text-[12px] text-[#53565a]">Tambahkan konfigurasi berikut ke <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">mcp_config.json</code> (Antigravity) atau <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">.gemini/settings.json</code> (Gemini CLI), lalu ganti <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#c94d00]">${OQARI_MCP_TOKEN}</code> dengan kunci akses Anda:</p>
+                                        <textarea id="mcp-gemini-config" x-ref="command" class="{{ $field }} bg-white font-mono text-[12px]" readonly rows="8">{{ $claudeConfig }}</textarea>
+                                        <button type="button" class="{{ $secondaryButton }}" @click="copy('command', 'Konfigurasi')">
+                                            <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
+                                        </button>
+                                    </div>
+                                </details>
                             @else
                                 <p class="text-[13px] text-[#53565a]">Tambahkan server MCP dengan transport <strong class="text-[#111827]">Streamable HTTP</strong>. Masukkan URL di bawah dan pilih autentikasi <strong class="text-[#111827]">Bearer token</strong> dengan kunci OQARI.</p>
                                 <div class="flex flex-col gap-2 sm:flex-row">
@@ -313,7 +585,7 @@
                                 </div>
                             @endif
 
-                            @if($client !== 'other')
+                            @if(in_array($client, ['codex', 'claude-code'], true))
                                 <details class="group/win rounded-[10px] border border-[#f1f3f5] bg-[#f8f9fa] px-3.5">
                                     <summary class="flex min-h-[42px] cursor-pointer list-none items-center justify-between py-2.5 text-[12px] font-semibold text-[#111827]">
                                         <span>Cara menyimpan kunci di Windows</span>
@@ -463,14 +735,422 @@
                                     <p class="break-words text-[14px] font-bold text-[#111827]">{{ $connection->name }}</p>
                                     @if($connection->revoked_at)
                                         <span class="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[10px] font-semibold text-red-700">{{ $status }}</span>
-                                    @elseif($expired)
+                                    @elseif($client === 'chatgpt')
+                                {{-- Ringkasan Konfigurasi MCP OQARI --}}
+                                <div class="space-y-3 rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Custom MCP Server</p>
+                                            <p class="text-[12px] text-[#53565a]">Salin URL ini untuk dipasang di menu Apps / Plugins ChatGPT.</p>
+                                        </div>
+                                        <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-1 text-[11px] font-semibold text-[#df5826]">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-[#df5826]" aria-hidden="true"></span>
+                                            <span>Streamable HTTP</span>
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-col gap-2 sm:flex-row">
+                                        <label class="sr-only" for="mcp-endpoint-chatgpt">URL server MCP</label>
+                                        <input id="mcp-endpoint-chatgpt" x-ref="endpoint" class="{{ $field }} flex-1 bg-white font-mono text-[12px]" readonly value="{{ $endpoint }}">
+                                        <button type="button" class="{{ $secondaryButton }} shrink-0" @click="copy('endpoint', 'URL')">
+                                            <i class="fas text-[12px]" :class="copied === 'endpoint' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'endpoint' ? 'URL tersalin' : 'Salin URL'">Salin URL</span>
+                                        </button>
+                                    </div>
+                                    <div class="grid gap-2 text-[12px] sm:grid-cols-3">
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Autentikasi</p>
+                                            <p class="font-semibold text-[#111827]">OAuth / Bearer Token</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Hak Akses</p>
+                                            <p class="font-semibold text-[#111827]">Akses baca (Read-only)</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Cakupan & Masa Berlaku</p>
+                                            <p class="font-semibold text-[#111827]">{{ $hasBranches ? $branches->count().' outlet' : 'Outlet utama' }} · {{ config('oqari_mcp.token_days') }} hari</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Dukungan Paket ChatGPT --}}
+                                <div class="rounded-[12px] border border-[#e9ebf0] bg-white p-4">
+                                    <p class="mb-2.5 text-[12px] font-bold text-[#111827]">Dukungan Paket ChatGPT untuk Custom MCP</p>
+                                    <div class="grid gap-2 text-[12px] sm:grid-cols-2">
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Free</span>
+                                            <span class="rounded-full bg-gray-200 px-2 py-0.5 text-[11px] font-semibold text-gray-700">Tidak mendukung</span>
+                                        </div>
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Plus</span>
+                                            <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">Terbatas (tergantung rollout)</span>
+                                        </div>
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Pro</span>
+                                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">Mendukung (Read / Fetch)</span>
+                                        </div>
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Business / Enterprise / Edu</span>
+                                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">Mendukung penuh</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Langkah Pemasangan ChatGPT --}}
+                                <div class="space-y-2">
+                                    <p class="text-[12px] font-bold text-[#111827]">Langkah menghubungkan di ChatGPT Web</p>
+                                    <ol class="list-decimal space-y-1.5 pl-5 text-[13px] text-[#53565a]">
+                                        <li>Buka <strong class="text-[#111827]">chatgpt.com</strong> lalu masuk ke menu <strong class="text-[#111827]">Apps / Plugins</strong>.</li>
+                                        <li>Klik tombol <strong class="text-[#111827]">+</strong> dan pilih <strong class="text-[#111827]">Add custom MCP server</strong>.</li>
+                                        <li>Masukkan nama <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI Advance</code> dan tempel <strong class="text-[#111827]">Server URL</strong> di atas.</li>
+                                        <li>Pilih metode autentikasi yang tersedia (<strong class="text-[#111827]">OAuth</strong> atau <strong class="text-[#111827]">Bearer Token</strong> dengan kunci akses OQARI).</li>
+                                        <li>Centang persetujuan lalu klik <strong class="text-[#111827]">Create as a plugin</strong>.</li>
+                                        <li>Setelah terhubung, uji dengan memanggil <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">oqari_get_context</code> atau pertanyaan contoh di bawah.</li>
+                                    </ol>
+                                </div>
+                            @elseif($client === 'gemini')
+                                {{-- Ringkasan Konfigurasi MCP OQARI --}}
+                                <div class="space-y-3 rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Custom App (MCP)</p>
+                                            <p class="text-[12px] text-[#53565a]">Mendukung Gemini Web (tersinkron ke aplikasi mobile), Gemini CLI, dan Antigravity.</p>
+                                        </div>
+                                        <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-1 text-[11px] font-semibold text-[#df5826]">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-[#df5826]" aria-hidden="true"></span>
+                                            <span>Streamable HTTP</span>
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-col gap-2 sm:flex-row">
+                                        <label class="sr-only" for="mcp-endpoint-gemini">URL server MCP</label>
+                                        <input id="mcp-endpoint-gemini" x-ref="endpoint" class="{{ $field }} flex-1 bg-white font-mono text-[12px]" readonly value="{{ $endpoint }}">
+                                        <button type="button" class="{{ $secondaryButton }} shrink-0" @click="copy('endpoint', 'URL')">
+                                            <i class="fas text-[12px]" :class="copied === 'endpoint' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'endpoint' ? 'URL tersalin' : 'Salin URL'">Salin URL</span>
+                                        </button>
+                                    </div>
+                                    <div class="grid gap-2 text-[12px] sm:grid-cols-3">
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Autentikasi</p>
+                                            <p class="font-semibold text-[#111827]">OAuth (Web) · Bearer (CLI)</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Hak Akses</p>
+                                            <p class="font-semibold text-[#111827]">Akses baca (Read-only)</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Cakupan & Masa Berlaku</p>
+                                            <p class="font-semibold text-[#111827]">{{ $hasBranches ? $branches->count().' outlet' : 'Outlet utama' }} · {{ config('oqari_mcp.token_days') }} hari</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Langkah Pemasangan Gemini Web --}}
+                                <div class="space-y-2">
+                                    <p class="text-[12px] font-bold text-[#111827]">Cara pasang di Gemini Web (gemini.google.com)</p>
+                                    <ol class="list-decimal space-y-1.5 pl-5 text-[13px] text-[#53565a]">
+                                        <li>Buka <strong class="text-[#111827]">gemini.google.com</strong> → klik <strong class="text-[#111827]">Settings</strong> di pojok kiri bawah → pilih <strong class="text-[#111827]">Connected Apps</strong>.</li>
+                                        <li>Pada bagian <strong class="text-[#111827]">Custom apps</strong>, klik <strong class="text-[#111827]">Add a custom app</strong>.</li>
+                                        <li>Masukkan nama <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI Advance</code> dan tempel <strong class="text-[#111827]">Server URL</strong> di atas.</li>
+                                        <li>Selesaikan autentikasi (atau buka <strong class="text-[#111827]">Advanced features</strong> jika diminta kredensial OAuth), lalu klik <strong class="text-[#111827]">Next</strong>.</li>
+                                        <li>Panggil di chat dengan mengetik <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">@OQARI Advance</code> atau langsung ajukan pertanyaan contoh di bawah.</li>
+                                    </ol>
+                                </div>
+
+                                {{-- Konfigurasi Gemini CLI / Antigravity --}}
+                                <details class="group/cli rounded-[10px] border border-[#e9ebf0] bg-[#f8f9fa] px-3.5">
+                                    <summary class="flex min-h-[42px] cursor-pointer list-none items-center justify-between py-2.5 text-[12px] font-semibold text-[#111827]">
+                                        <span>Untuk Gemini CLI atau Antigravity (pakai Bearer Token)</span>
+                                        <i class="fas fa-chevron-down text-[10px] text-[#7f837e] transition-transform group-open/cli:rotate-180" aria-hidden="true"></i>
+                                    </summary>
+                                    <div class="space-y-2.5 pb-3.5">
+                                        <p class="text-[12px] text-[#53565a]">Tambahkan konfigurasi berikut ke <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">mcp_config.json</code> (Antigravity) atau <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">.gemini/settings.json</code> (Gemini CLI), lalu ganti <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#c94d00]">${OQARI_MCP_TOKEN}</code> dengan kunci akses Anda:</p>
+                                        <textarea id="mcp-gemini-config" x-ref="command" class="{{ $field }} bg-white font-mono text-[12px]" readonly rows="8">{{ $claudeConfig }}</textarea>
+                                        <button type="button" class="{{ $secondaryButton }}" @click="copy('command', 'Konfigurasi')">
+                                            <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
+                                        </button>
+                                    </div>
+                                </details>
+                            @elseif($expired)
                                         <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold text-amber-700">{{ $status }}</span>
-                                    @elseif($connection->last_used_at)
+                                    @elseif($client === 'chatgpt')
+                                {{-- Ringkasan Konfigurasi MCP OQARI --}}
+                                <div class="space-y-3 rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Custom MCP Server</p>
+                                            <p class="text-[12px] text-[#53565a]">Salin URL ini untuk dipasang di menu Apps / Plugins ChatGPT.</p>
+                                        </div>
+                                        <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-1 text-[11px] font-semibold text-[#df5826]">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-[#df5826]" aria-hidden="true"></span>
+                                            <span>Streamable HTTP</span>
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-col gap-2 sm:flex-row">
+                                        <label class="sr-only" for="mcp-endpoint-chatgpt">URL server MCP</label>
+                                        <input id="mcp-endpoint-chatgpt" x-ref="endpoint" class="{{ $field }} flex-1 bg-white font-mono text-[12px]" readonly value="{{ $endpoint }}">
+                                        <button type="button" class="{{ $secondaryButton }} shrink-0" @click="copy('endpoint', 'URL')">
+                                            <i class="fas text-[12px]" :class="copied === 'endpoint' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'endpoint' ? 'URL tersalin' : 'Salin URL'">Salin URL</span>
+                                        </button>
+                                    </div>
+                                    <div class="grid gap-2 text-[12px] sm:grid-cols-3">
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Autentikasi</p>
+                                            <p class="font-semibold text-[#111827]">OAuth / Bearer Token</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Hak Akses</p>
+                                            <p class="font-semibold text-[#111827]">Akses baca (Read-only)</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Cakupan & Masa Berlaku</p>
+                                            <p class="font-semibold text-[#111827]">{{ $hasBranches ? $branches->count().' outlet' : 'Outlet utama' }} · {{ config('oqari_mcp.token_days') }} hari</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Dukungan Paket ChatGPT --}}
+                                <div class="rounded-[12px] border border-[#e9ebf0] bg-white p-4">
+                                    <p class="mb-2.5 text-[12px] font-bold text-[#111827]">Dukungan Paket ChatGPT untuk Custom MCP</p>
+                                    <div class="grid gap-2 text-[12px] sm:grid-cols-2">
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Free</span>
+                                            <span class="rounded-full bg-gray-200 px-2 py-0.5 text-[11px] font-semibold text-gray-700">Tidak mendukung</span>
+                                        </div>
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Plus</span>
+                                            <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">Terbatas (tergantung rollout)</span>
+                                        </div>
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Pro</span>
+                                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">Mendukung (Read / Fetch)</span>
+                                        </div>
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Business / Enterprise / Edu</span>
+                                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">Mendukung penuh</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Langkah Pemasangan ChatGPT --}}
+                                <div class="space-y-2">
+                                    <p class="text-[12px] font-bold text-[#111827]">Langkah menghubungkan di ChatGPT Web</p>
+                                    <ol class="list-decimal space-y-1.5 pl-5 text-[13px] text-[#53565a]">
+                                        <li>Buka <strong class="text-[#111827]">chatgpt.com</strong> lalu masuk ke menu <strong class="text-[#111827]">Apps / Plugins</strong>.</li>
+                                        <li>Klik tombol <strong class="text-[#111827]">+</strong> dan pilih <strong class="text-[#111827]">Add custom MCP server</strong>.</li>
+                                        <li>Masukkan nama <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI Advance</code> dan tempel <strong class="text-[#111827]">Server URL</strong> di atas.</li>
+                                        <li>Pilih metode autentikasi yang tersedia (<strong class="text-[#111827]">OAuth</strong> atau <strong class="text-[#111827]">Bearer Token</strong> dengan kunci akses OQARI).</li>
+                                        <li>Centang persetujuan lalu klik <strong class="text-[#111827]">Create as a plugin</strong>.</li>
+                                        <li>Setelah terhubung, uji dengan memanggil <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">oqari_get_context</code> atau pertanyaan contoh di bawah.</li>
+                                    </ol>
+                                </div>
+                            @elseif($client === 'gemini')
+                                {{-- Ringkasan Konfigurasi MCP OQARI --}}
+                                <div class="space-y-3 rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Custom App (MCP)</p>
+                                            <p class="text-[12px] text-[#53565a]">Mendukung Gemini Web (tersinkron ke aplikasi mobile), Gemini CLI, dan Antigravity.</p>
+                                        </div>
+                                        <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-1 text-[11px] font-semibold text-[#df5826]">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-[#df5826]" aria-hidden="true"></span>
+                                            <span>Streamable HTTP</span>
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-col gap-2 sm:flex-row">
+                                        <label class="sr-only" for="mcp-endpoint-gemini">URL server MCP</label>
+                                        <input id="mcp-endpoint-gemini" x-ref="endpoint" class="{{ $field }} flex-1 bg-white font-mono text-[12px]" readonly value="{{ $endpoint }}">
+                                        <button type="button" class="{{ $secondaryButton }} shrink-0" @click="copy('endpoint', 'URL')">
+                                            <i class="fas text-[12px]" :class="copied === 'endpoint' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'endpoint' ? 'URL tersalin' : 'Salin URL'">Salin URL</span>
+                                        </button>
+                                    </div>
+                                    <div class="grid gap-2 text-[12px] sm:grid-cols-3">
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Autentikasi</p>
+                                            <p class="font-semibold text-[#111827]">OAuth (Web) · Bearer (CLI)</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Hak Akses</p>
+                                            <p class="font-semibold text-[#111827]">Akses baca (Read-only)</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Cakupan & Masa Berlaku</p>
+                                            <p class="font-semibold text-[#111827]">{{ $hasBranches ? $branches->count().' outlet' : 'Outlet utama' }} · {{ config('oqari_mcp.token_days') }} hari</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Langkah Pemasangan Gemini Web --}}
+                                <div class="space-y-2">
+                                    <p class="text-[12px] font-bold text-[#111827]">Cara pasang di Gemini Web (gemini.google.com)</p>
+                                    <ol class="list-decimal space-y-1.5 pl-5 text-[13px] text-[#53565a]">
+                                        <li>Buka <strong class="text-[#111827]">gemini.google.com</strong> → klik <strong class="text-[#111827]">Settings</strong> di pojok kiri bawah → pilih <strong class="text-[#111827]">Connected Apps</strong>.</li>
+                                        <li>Pada bagian <strong class="text-[#111827]">Custom apps</strong>, klik <strong class="text-[#111827]">Add a custom app</strong>.</li>
+                                        <li>Masukkan nama <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI Advance</code> dan tempel <strong class="text-[#111827]">Server URL</strong> di atas.</li>
+                                        <li>Selesaikan autentikasi (atau buka <strong class="text-[#111827]">Advanced features</strong> jika diminta kredensial OAuth), lalu klik <strong class="text-[#111827]">Next</strong>.</li>
+                                        <li>Panggil di chat dengan mengetik <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">@OQARI Advance</code> atau langsung ajukan pertanyaan contoh di bawah.</li>
+                                    </ol>
+                                </div>
+
+                                {{-- Konfigurasi Gemini CLI / Antigravity --}}
+                                <details class="group/cli rounded-[10px] border border-[#e9ebf0] bg-[#f8f9fa] px-3.5">
+                                    <summary class="flex min-h-[42px] cursor-pointer list-none items-center justify-between py-2.5 text-[12px] font-semibold text-[#111827]">
+                                        <span>Untuk Gemini CLI atau Antigravity (pakai Bearer Token)</span>
+                                        <i class="fas fa-chevron-down text-[10px] text-[#7f837e] transition-transform group-open/cli:rotate-180" aria-hidden="true"></i>
+                                    </summary>
+                                    <div class="space-y-2.5 pb-3.5">
+                                        <p class="text-[12px] text-[#53565a]">Tambahkan konfigurasi berikut ke <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">mcp_config.json</code> (Antigravity) atau <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">.gemini/settings.json</code> (Gemini CLI), lalu ganti <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#c94d00]">${OQARI_MCP_TOKEN}</code> dengan kunci akses Anda:</p>
+                                        <textarea id="mcp-gemini-config" x-ref="command" class="{{ $field }} bg-white font-mono text-[12px]" readonly rows="8">{{ $claudeConfig }}</textarea>
+                                        <button type="button" class="{{ $secondaryButton }}" @click="copy('command', 'Konfigurasi')">
+                                            <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
+                                        </button>
+                                    </div>
+                                </details>
+                            @elseif($connection->last_used_at)
                                         <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
                                             <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                                             {{ $status }}
                                         </span>
-                                    @else
+                                    @elseif($client === 'chatgpt')
+                                {{-- Ringkasan Konfigurasi MCP OQARI --}}
+                                <div class="space-y-3 rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Custom MCP Server</p>
+                                            <p class="text-[12px] text-[#53565a]">Salin URL ini untuk dipasang di menu Apps / Plugins ChatGPT.</p>
+                                        </div>
+                                        <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-1 text-[11px] font-semibold text-[#df5826]">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-[#df5826]" aria-hidden="true"></span>
+                                            <span>Streamable HTTP</span>
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-col gap-2 sm:flex-row">
+                                        <label class="sr-only" for="mcp-endpoint-chatgpt">URL server MCP</label>
+                                        <input id="mcp-endpoint-chatgpt" x-ref="endpoint" class="{{ $field }} flex-1 bg-white font-mono text-[12px]" readonly value="{{ $endpoint }}">
+                                        <button type="button" class="{{ $secondaryButton }} shrink-0" @click="copy('endpoint', 'URL')">
+                                            <i class="fas text-[12px]" :class="copied === 'endpoint' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'endpoint' ? 'URL tersalin' : 'Salin URL'">Salin URL</span>
+                                        </button>
+                                    </div>
+                                    <div class="grid gap-2 text-[12px] sm:grid-cols-3">
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Autentikasi</p>
+                                            <p class="font-semibold text-[#111827]">OAuth / Bearer Token</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Hak Akses</p>
+                                            <p class="font-semibold text-[#111827]">Akses baca (Read-only)</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Cakupan & Masa Berlaku</p>
+                                            <p class="font-semibold text-[#111827]">{{ $hasBranches ? $branches->count().' outlet' : 'Outlet utama' }} · {{ config('oqari_mcp.token_days') }} hari</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Dukungan Paket ChatGPT --}}
+                                <div class="rounded-[12px] border border-[#e9ebf0] bg-white p-4">
+                                    <p class="mb-2.5 text-[12px] font-bold text-[#111827]">Dukungan Paket ChatGPT untuk Custom MCP</p>
+                                    <div class="grid gap-2 text-[12px] sm:grid-cols-2">
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Free</span>
+                                            <span class="rounded-full bg-gray-200 px-2 py-0.5 text-[11px] font-semibold text-gray-700">Tidak mendukung</span>
+                                        </div>
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Plus</span>
+                                            <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">Terbatas (tergantung rollout)</span>
+                                        </div>
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Pro</span>
+                                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">Mendukung (Read / Fetch)</span>
+                                        </div>
+                                        <div class="flex items-center justify-between rounded-[8px] bg-[#f8f9fa] px-3 py-2">
+                                            <span class="font-medium text-[#111827]">Business / Enterprise / Edu</span>
+                                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">Mendukung penuh</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Langkah Pemasangan ChatGPT --}}
+                                <div class="space-y-2">
+                                    <p class="text-[12px] font-bold text-[#111827]">Langkah menghubungkan di ChatGPT Web</p>
+                                    <ol class="list-decimal space-y-1.5 pl-5 text-[13px] text-[#53565a]">
+                                        <li>Buka <strong class="text-[#111827]">chatgpt.com</strong> lalu masuk ke menu <strong class="text-[#111827]">Apps / Plugins</strong>.</li>
+                                        <li>Klik tombol <strong class="text-[#111827]">+</strong> dan pilih <strong class="text-[#111827]">Add custom MCP server</strong>.</li>
+                                        <li>Masukkan nama <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI Advance</code> dan tempel <strong class="text-[#111827]">Server URL</strong> di atas.</li>
+                                        <li>Pilih metode autentikasi yang tersedia (<strong class="text-[#111827]">OAuth</strong> atau <strong class="text-[#111827]">Bearer Token</strong> dengan kunci akses OQARI).</li>
+                                        <li>Centang persetujuan lalu klik <strong class="text-[#111827]">Create as a plugin</strong>.</li>
+                                        <li>Setelah terhubung, uji dengan memanggil <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">oqari_get_context</code> atau pertanyaan contoh di bawah.</li>
+                                    </ol>
+                                </div>
+                            @elseif($client === 'gemini')
+                                {{-- Ringkasan Konfigurasi MCP OQARI --}}
+                                <div class="space-y-3 rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Custom App (MCP)</p>
+                                            <p class="text-[12px] text-[#53565a]">Mendukung Gemini Web (tersinkron ke aplikasi mobile), Gemini CLI, dan Antigravity.</p>
+                                        </div>
+                                        <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-1 text-[11px] font-semibold text-[#df5826]">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-[#df5826]" aria-hidden="true"></span>
+                                            <span>Streamable HTTP</span>
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-col gap-2 sm:flex-row">
+                                        <label class="sr-only" for="mcp-endpoint-gemini">URL server MCP</label>
+                                        <input id="mcp-endpoint-gemini" x-ref="endpoint" class="{{ $field }} flex-1 bg-white font-mono text-[12px]" readonly value="{{ $endpoint }}">
+                                        <button type="button" class="{{ $secondaryButton }} shrink-0" @click="copy('endpoint', 'URL')">
+                                            <i class="fas text-[12px]" :class="copied === 'endpoint' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'endpoint' ? 'URL tersalin' : 'Salin URL'">Salin URL</span>
+                                        </button>
+                                    </div>
+                                    <div class="grid gap-2 text-[12px] sm:grid-cols-3">
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Autentikasi</p>
+                                            <p class="font-semibold text-[#111827]">OAuth (Web) · Bearer (CLI)</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Hak Akses</p>
+                                            <p class="font-semibold text-[#111827]">Akses baca (Read-only)</p>
+                                        </div>
+                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
+                                            <p class="text-[11px] text-[#7f837e]">Cakupan & Masa Berlaku</p>
+                                            <p class="font-semibold text-[#111827]">{{ $hasBranches ? $branches->count().' outlet' : 'Outlet utama' }} · {{ config('oqari_mcp.token_days') }} hari</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Langkah Pemasangan Gemini Web --}}
+                                <div class="space-y-2">
+                                    <p class="text-[12px] font-bold text-[#111827]">Cara pasang di Gemini Web (gemini.google.com)</p>
+                                    <ol class="list-decimal space-y-1.5 pl-5 text-[13px] text-[#53565a]">
+                                        <li>Buka <strong class="text-[#111827]">gemini.google.com</strong> → klik <strong class="text-[#111827]">Settings</strong> di pojok kiri bawah → pilih <strong class="text-[#111827]">Connected Apps</strong>.</li>
+                                        <li>Pada bagian <strong class="text-[#111827]">Custom apps</strong>, klik <strong class="text-[#111827]">Add a custom app</strong>.</li>
+                                        <li>Masukkan nama <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI Advance</code> dan tempel <strong class="text-[#111827]">Server URL</strong> di atas.</li>
+                                        <li>Selesaikan autentikasi (atau buka <strong class="text-[#111827]">Advanced features</strong> jika diminta kredensial OAuth), lalu klik <strong class="text-[#111827]">Next</strong>.</li>
+                                        <li>Panggil di chat dengan mengetik <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">@OQARI Advance</code> atau langsung ajukan pertanyaan contoh di bawah.</li>
+                                    </ol>
+                                </div>
+
+                                {{-- Konfigurasi Gemini CLI / Antigravity --}}
+                                <details class="group/cli rounded-[10px] border border-[#e9ebf0] bg-[#f8f9fa] px-3.5">
+                                    <summary class="flex min-h-[42px] cursor-pointer list-none items-center justify-between py-2.5 text-[12px] font-semibold text-[#111827]">
+                                        <span>Untuk Gemini CLI atau Antigravity (pakai Bearer Token)</span>
+                                        <i class="fas fa-chevron-down text-[10px] text-[#7f837e] transition-transform group-open/cli:rotate-180" aria-hidden="true"></i>
+                                    </summary>
+                                    <div class="space-y-2.5 pb-3.5">
+                                        <p class="text-[12px] text-[#53565a]">Tambahkan konfigurasi berikut ke <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">mcp_config.json</code> (Antigravity) atau <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">.gemini/settings.json</code> (Gemini CLI), lalu ganti <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#c94d00]">${OQARI_MCP_TOKEN}</code> dengan kunci akses Anda:</p>
+                                        <textarea id="mcp-gemini-config" x-ref="command" class="{{ $field }} bg-white font-mono text-[12px]" readonly rows="8">{{ $claudeConfig }}</textarea>
+                                        <button type="button" class="{{ $secondaryButton }}" @click="copy('command', 'Konfigurasi')">
+                                            <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
+                                        </button>
+                                    </div>
+                                </details>
+                            @else
                                         <span class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-[10px] font-semibold text-sky-700">{{ $status }}</span>
                                     @endif
                                 </div>
