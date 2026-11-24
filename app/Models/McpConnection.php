@@ -12,15 +12,16 @@ class McpConnection extends Model
     use HasFactory, HasUuids;
 
     protected $fillable = [
-        'shop_id', 'user_id', 'name', 'role', 'oauth_client_id', 'token_hash', 'token_suffix',
+        'shop_id', 'user_id', 'name', 'role', 'oauth_client_id', 'token_hash', 'token_suffix', 'token_encrypted',
         'abilities', 'branch_ids', 'account_version', 'expires_at', 'revoked_at', 'last_used_at',
     ];
 
-    protected $hidden = ['token_hash'];
+    protected $hidden = ['token_hash', 'token_encrypted'];
 
     protected function casts(): array
     {
         return [
+            'token_encrypted' => 'encrypted',
             'abilities' => 'array',
             'branch_ids' => 'array',
             'account_version' => 'integer',

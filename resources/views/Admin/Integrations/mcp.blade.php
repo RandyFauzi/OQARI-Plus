@@ -45,6 +45,9 @@
     message: '',
     copied: '',
     timer: null,
+    revealedTokens: {},
+    visibleTokens: {},
+    loadingToken: '',
     async copy(field, label) {
         const input = this.$refs[field];
         if (!input) return;
@@ -59,6 +62,56 @@
             input.select();
             this.copied = '';
             this.message = 'Teks dipilih. Tekan Ctrl+C atau Command+C untuk menyalin.';
+        }
+    },
+    async fetchConnectionToken(id, url) {
+        if (this.revealedTokens[id]) return this.revealedTokens[id];
+        this.loadingToken = id;
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                },
+            });
+            if (!response.ok) {
+                this.message = 'Kunci akses tidak dapat dimuat.';
+                return null;
+            }
+            const data = await response.json();
+            if (!data.token) return null;
+            this.revealedTokens[id] = data.token;
+            return data.token;
+        } catch {
+            this.message = 'Gagal mengambil kunci akses.';
+            return null;
+        } finally {
+            this.loadingToken = '';
+        }
+    },
+    async toggleRevealToken(id, url) {
+        if (this.visibleTokens[id]) {
+            this.visibleTokens[id] = false;
+            return;
+        }
+        const token = await this.fetchConnectionToken(id, url);
+        if (token) {
+            this.visibleTokens[id] = true;
+        }
+    },
+    async copyConnectionToken(id, url) {
+        const token = await this.fetchConnectionToken(id, url);
+        if (!token) return;
+        try {
+            await navigator.clipboard.writeText(token);
+            this.copied = 'conn-' + id;
+            this.message = 'Kunci akses disalin ke clipboard.';
+            clearTimeout(this.timer);
+            this.timer = setTimeout(() => { this.copied = ''; }, 2200);
+        } catch {
+            this.visibleTokens[id] = true;
+            this.message = 'Kunci ditampilkan. Silakan salin secara manual.';
         }
     },
     toggleAllBranches(checked) {
@@ -394,6 +447,8 @@
                     @php
                         $expired = $connection->expires_at?->isPast();
                         $isActive = ! $connection->revoked_at && ! $expired;
+                        $canRevealToken = $isActive && $connection->getRawOriginal('token_encrypted') !== null;
+                        $revealUrl = $canRevealToken ? route('admin.integrations.mcp.reveal', $connection->id) : '';
                         $status = $connection->revoked_at ? 'Dicabut' : ($expired ? 'Kedaluwarsa' : ($connection->last_used_at ? 'Pernah digunakan' : 'Belum digunakan'));
                     @endphp
                     <div class="flex flex-col justify-between gap-4 px-5 py-4 transition hover:bg-[#fafbfc] sm:flex-row sm:items-center">
@@ -418,10 +473,27 @@
                                     @endif
                                 </div>
 
-                                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#7f837e]">
-                                    <span class="inline-flex items-center rounded-md border border-[#e9ebf0] bg-[#f8f9fa] px-2 py-0.5 font-mono text-[11px] font-medium text-[#53565a]">
+                                <div class="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[12px] text-[#7f837e]">
+                                    <span class="inline-flex max-w-full items-center rounded-md border border-[#e9ebf0] bg-[#f8f9fa] px-2 py-0.5 font-mono text-[11px] font-medium text-[#53565a] break-all"
+                                          @if($canRevealToken) x-text="visibleTokens['{{ $connection->id }}'] ? revealedTokens['{{ $connection->id }}'] : '••••{{ $connection->token_suffix }}'" @endif>
                                         {{ $connection->token_suffix ? '••••'.$connection->token_suffix : 'OAuth' }}
                                     </span>
+                                    @if($canRevealToken)
+                                        <button type="button"
+                                                @click="toggleRevealToken('{{ $connection->id }}', '{{ $revealUrl }}')"
+                                                :disabled="loadingToken === '{{ $connection->id }}'"
+                                                class="inline-flex h-[26px] cursor-pointer items-center gap-1 rounded-md border border-[#e9ebf0] bg-white px-2 text-[11px] font-semibold text-[#53565a] transition hover:border-[#ffd2b8] hover:bg-[#fff6f0] hover:text-[#df5826] disabled:opacity-60">
+                                            <i class="fas text-[10px]" :class="visibleTokens['{{ $connection->id }}'] ? 'fa-eye-slash' : 'fa-eye'" aria-hidden="true"></i>
+                                            <span x-text="visibleTokens['{{ $connection->id }}'] ? 'Sembunyikan' : 'Lihat'">Lihat</span>
+                                        </button>
+                                        <button type="button"
+                                                @click="copyConnectionToken('{{ $connection->id }}', '{{ $revealUrl }}')"
+                                                :disabled="loadingToken === '{{ $connection->id }}'"
+                                                class="inline-flex h-[26px] cursor-pointer items-center gap-1 rounded-md border border-[#e9ebf0] bg-white px-2 text-[11px] font-semibold text-[#53565a] transition hover:border-[#ffd2b8] hover:bg-[#fff6f0] hover:text-[#df5826] disabled:opacity-60">
+                                            <i class="fas text-[10px]" :class="copied === 'conn-{{ $connection->id }}' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                            <span x-text="copied === 'conn-{{ $connection->id }}' ? 'Tersalin' : 'Salin'">Salin</span>
+                                        </button>
+                                    @endif
                                     @if($connection->last_used_at)
                                         <span>Terakhir digunakan {{ $connection->last_used_at->diffForHumans() }}</span>
                                     @endif

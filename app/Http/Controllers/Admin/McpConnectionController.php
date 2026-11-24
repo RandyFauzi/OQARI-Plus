@@ -8,6 +8,7 @@ use App\Models\McpConnection;
 use App\Models\User;
 use App\Services\McpAccess;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -90,7 +91,7 @@ class McpConnectionController extends Controller
             McpConnection::create([
                 'user_id' => $actor->id, 'shop_id' => $actor->shop_id, 'role' => $role, 'name' => $data['name'],
                 'abilities' => $data['abilities'], 'branch_ids' => $actor->shop?->branches_enabled ? array_map('intval', $data['branch_ids']) : null,
-                'token_hash' => hash('sha256', $token), 'token_suffix' => substr($token, -4),
+                'token_hash' => hash('sha256', $token), 'token_suffix' => substr($token, -4), 'token_encrypted' => $token,
                 'account_version' => $actor->account_version ?? 0,
                 'expires_at' => now()->addDays(config('oqari_mcp.token_days')),
             ]);
@@ -101,11 +102,25 @@ class McpConnectionController extends Controller
         return redirect()->route('admin.integrations.mcp', $query)->with('oqari_mcp_new_token', Crypt::encryptString($token));
     }
 
+    public function reveal(Request $request, string $connection): JsonResponse
+    {
+        [$actor] = $this->actor($request);
+        $connection = $this->connections($actor)->whereKey($connection)->firstOrFail();
+        $expired = $connection->expires_at?->isPast() ?? false;
+
+        if ($connection->revoked_at !== null || $expired || blank($connection->token_encrypted)) {
+            return response()->json(['message' => 'Kunci akses tidak tersedia.'], 404);
+        }
+
+        return response()->json(['token' => $connection->token_encrypted])
+            ->header('Cache-Control', 'no-store');
+    }
+
     public function destroy(Request $request, string $connection): RedirectResponse
     {
         [$actor] = $this->actor($request);
         $connection = $this->connections($actor)->whereKey($connection)->firstOrFail();
-        $connection->update(['revoked_at' => now(), 'token_hash' => null]);
+        $connection->update(['revoked_at' => now(), 'token_hash' => null, 'token_encrypted' => null]);
 
         $tab = $request->input('tab') === 'connected' ? 'connected' : 'tokens';
 

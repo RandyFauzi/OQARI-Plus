@@ -53,6 +53,7 @@ Route::get('/admin/owner/dashboard', OwnerDashboardController::class)
 Route::middleware('auth')->controller(McpConnectionController::class)->group(function () {
     Route::get('/admin/integrations/mcp', 'index')->name('admin.integrations.mcp');
     Route::post('/admin/integrations/mcp', 'store')->name('admin.integrations.mcp.store');
+    Route::post('/admin/integrations/mcp/{connection}/reveal', 'reveal')->name('admin.integrations.mcp.reveal');
     Route::delete('/admin/integrations/mcp/{connection}', 'destroy')->name('admin.integrations.mcp.destroy');
 });
 

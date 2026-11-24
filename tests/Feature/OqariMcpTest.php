@@ -417,6 +417,41 @@ class OqariMcpTest extends TestCase
         return $this->postJson('/mcp/oqari', ['jsonrpc' => '2.0', 'id' => 1, 'method' => $method, 'params' => (object) $params], $headers);
     }
 
+    public function test_owner_can_reveal_active_key_but_not_after_revoke_or_by_other_user(): void
+    {
+        [$owner, $pramuka] = $this->business();
+        $otherShop = Shop::factory()->create(['onboarding_status' => 'completed']);
+        $otherOwner = User::factory()->create(['shop_id' => $otherShop->id, 'role' => 'owner']);
+
+        $this->actingAs($owner)->post(route('admin.integrations.mcp.store'), [
+            'name' => 'Aplikasi lain', 'branch_ids' => [$pramuka->id], 'abilities' => ['sales'],
+        ])->assertRedirect(route('admin.integrations.mcp'));
+
+        $connection = McpConnection::where('user_id', $owner->id)->sole();
+        $token = $this->get(route('admin.integrations.mcp'))->viewData('newToken');
+
+        $this->get(route('admin.integrations.mcp', ['tab' => 'tokens']))
+            ->assertOk()
+            ->assertSee('Lihat')
+            ->assertSee('Salin')
+            ->assertDontSee($token);
+
+        $this->postJson(route('admin.integrations.mcp.reveal', $connection->id))
+            ->assertOk()
+            ->assertJson(['token' => $token]);
+
+        $this->actingAs($otherOwner)
+            ->postJson(route('admin.integrations.mcp.reveal', $connection->id))
+            ->assertNotFound();
+
+        $this->actingAs($owner)
+            ->delete(route('admin.integrations.mcp.destroy', $connection->id))
+            ->assertRedirect();
+
+        $this->postJson(route('admin.integrations.mcp.reveal', $connection->id))
+            ->assertNotFound();
+    }
+
     private function callTool(string $token, string $name, array $arguments = [], bool $modern = false): TestResponse
     {
         return $this->rpc($token, 'tools/call', ['name' => $name, 'arguments' => (object) $arguments], $modern);
