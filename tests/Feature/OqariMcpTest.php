@@ -501,6 +501,72 @@ class OqariMcpTest extends TestCase
             ->assertSee('Add a custom app');
     }
 
+    public function test_dynamic_client_registration_supports_chatgpt_redirect_and_pkce_flow(): void
+    {
+        [$owner] = $this->business();
+        $options = ['private_key_bits' => 2048];
+        $bundledConfiguration = dirname(PHP_BINARY).'/extras/ssl/openssl.cnf';
+        if (is_file($bundledConfiguration)) {
+            $options['config'] = $bundledConfiguration;
+        }
+        $key = openssl_pkey_new($options);
+        $this->assertNotFalse($key);
+        openssl_pkey_export($key, $privateKey, null, $options);
+        $resource = route('oqari.mcp');
+        config([
+            'oqari_mcp.oauth_enabled' => true,
+            'passport.private_key' => $privateKey,
+            'passport.public_key' => openssl_pkey_get_details($key)['key'],
+        ]);
+
+        $this->getJson(route('oqari.mcp.metadata.root'))
+            ->assertOk()
+            ->assertJsonPath('resource', $resource);
+
+        $this->getJson(route('oqari.mcp.authorization-metadata'))
+            ->assertOk()
+            ->assertJsonPath('registration_endpoint', route('oqari.mcp.register-client'));
+
+        $this->postJson(route('oqari.mcp.register-client'), [
+            'client_name' => 'Bad Client',
+            'redirect_uris' => ['http://evil.example/callback'],
+        ])->assertBadRequest()->assertJsonPath('error', 'invalid_client_metadata');
+
+        $redirect = 'https://chatgpt.com/connector_platform_oauth_redirect';
+        $registered = $this->postJson(route('oqari.mcp.register-client'), [
+            'client_name' => 'ChatGPT Custom MCP',
+            'redirect_uris' => [$redirect],
+            'token_endpoint_auth_method' => 'none',
+        ])->assertCreated();
+
+        $clientId = $registered->json('client_id');
+        $this->assertNotEmpty($clientId);
+        $this->assertSame([$redirect], $registered->json('redirect_uris'));
+
+        $verifier = bin2hex(random_bytes(32));
+        $challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
+
+        $this->actingAs($owner)
+            ->get(route('passport.authorizations.authorize', [
+                'client_id' => $clientId, 'redirect_uri' => $redirect, 'response_type' => 'code',
+                'scope' => 'mcp:use', 'state' => 'chatgpt-state', 'resource' => $resource,
+                'code_challenge' => $challenge, 'code_challenge_method' => 'S256',
+            ]))
+            ->assertOk()
+            ->assertSessionHas('authToken');
+
+        $approved = $this->post(route('passport.authorizations.approve'), ['auth_token' => session('authToken')])->assertRedirect();
+        parse_str(parse_url($approved->headers->get('Location'), PHP_URL_QUERY), $query);
+
+        $accessToken = $this->postJson(route('passport.token'), [
+            'grant_type' => 'authorization_code', 'client_id' => $clientId, 'redirect_uri' => $redirect,
+            'code' => $query['code'], 'code_verifier' => $verifier, 'resource' => $resource,
+        ])->assertOk()->json('access_token');
+
+        $this->callTool($accessToken, 'oqari_get_context')->assertOk()
+            ->assertJsonPath('result.structuredContent.data.role', 'owner');
+    }
+
     private function callTool(string $token, string $name, array $arguments = [], bool $modern = false): TestResponse
     {
         return $this->rpc($token, 'tools/call', ['name' => $name, 'arguments' => (object) $arguments], $modern);
