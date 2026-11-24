@@ -366,12 +366,12 @@
                                     </ol>
                                 </div>
                             @elseif($client === 'gemini')
-                                {{-- Ringkasan Konfigurasi MCP OQARI --}}
+                                {{-- Ringkasan Konfigurasi MCP OQARI untuk Gemini CLI & Antigravity --}}
                                 <div class="space-y-3 rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4">
                                     <div class="flex flex-wrap items-center justify-between gap-2">
                                         <div>
-                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Custom App (MCP)</p>
-                                            <p class="text-[12px] text-[#53565a]">Mendukung Gemini Web (tersinkron ke aplikasi mobile), Gemini CLI, dan Antigravity.</p>
+                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Gemini CLI &amp; Antigravity</p>
+                                            <p class="text-[12px] text-[#53565a]">Gunakan <strong>Gemini CLI</strong>, <strong>Antigravity</strong>, atau <strong>Gemini Code Assist</strong>. (Gemini Web di <code>gemini.google.com</code> saat ini belum mendukung URL MCP kustom.)</p>
                                         </div>
                                         <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-1 text-[11px] font-semibold text-[#df5826]">
                                             <span class="h-1.5 w-1.5 rounded-full bg-[#df5826]" aria-hidden="true"></span>
@@ -386,49 +386,31 @@
                                             <span x-text="copied === 'endpoint' ? 'URL tersalin' : 'Salin URL'">Salin URL</span>
                                         </button>
                                     </div>
-                                    <div class="grid gap-2 text-[12px] sm:grid-cols-3">
-                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
-                                            <p class="text-[11px] text-[#7f837e]">Autentikasi</p>
-                                            <p class="font-semibold text-[#111827]">OAuth (Web) · Bearer (CLI)</p>
-                                        </div>
-                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
-                                            <p class="text-[11px] text-[#7f837e]">Hak Akses</p>
-                                            <p class="font-semibold text-[#111827]">Akses baca (Read-only)</p>
-                                        </div>
-                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
-                                            <p class="text-[11px] text-[#7f837e]">Cakupan & Masa Berlaku</p>
-                                            <p class="font-semibold text-[#111827]">{{ $hasBranches ? $branches->count().' outlet' : 'Outlet utama' }} · {{ config('oqari_mcp.token_days') }} hari</p>
-                                        </div>
-                                    </div>
                                 </div>
 
-                                {{-- Langkah Pemasangan Gemini Web --}}
+                                {{-- Cara 1: Perintah Gemini CLI --}}
                                 <div class="space-y-2">
-                                    <p class="text-[12px] font-bold text-[#111827]">Cara pasang di Gemini Web (gemini.google.com)</p>
-                                    <ol class="list-decimal space-y-1.5 pl-5 text-[13px] text-[#53565a]">
-                                        <li>Buka <strong class="text-[#111827]">gemini.google.com</strong> → klik <strong class="text-[#111827]">Settings</strong> di pojok kiri bawah → pilih <strong class="text-[#111827]">Connected Apps</strong>.</li>
-                                        <li>Pada bagian <strong class="text-[#111827]">Custom apps</strong>, klik <strong class="text-[#111827]">Add a custom app</strong>.</li>
-                                        <li>Masukkan nama <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI Advance</code> dan tempel <strong class="text-[#111827]">Server URL</strong> di atas.</li>
-                                        <li>Selesaikan autentikasi (atau buka <strong class="text-[#111827]">Advanced features</strong> jika diminta kredensial OAuth), lalu klik <strong class="text-[#111827]">Next</strong>.</li>
-                                        <li>Panggil di chat dengan mengetik <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">@OQARI Advance</code> atau langsung ajukan pertanyaan contoh di bawah.</li>
-                                    </ol>
+                                    <p class="text-[12px] font-bold text-[#111827]">1. Pasang cepat lewat Gemini CLI</p>
+                                    <p class="text-[13px] text-[#53565a]">Simpan kunci akses sebagai variabel lingkungan <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI_MCP_TOKEN</code>, lalu jalankan perintah ini di terminal:</p>
+                                    <label class="sr-only" for="mcp-gemini-cli">Perintah Gemini CLI</label>
+                                    <textarea id="mcp-gemini-cli" x-ref="geminiCli" class="{{ $field }} font-mono text-[12px]" readonly rows="2">gemini mcp add --transport http oqari {{ $endpoint }} -H "Authorization: Bearer ${OQARI_MCP_TOKEN}"</textarea>
+                                    <button type="button" class="{{ $secondaryButton }}" @click="copy('geminiCli', 'Perintah Gemini CLI')">
+                                        <i class="fas text-[12px]" :class="copied === 'geminiCli' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                        <span x-text="copied === 'geminiCli' ? 'Perintah tersalin' : 'Salin perintah Gemini CLI'">Salin perintah Gemini CLI</span>
+                                    </button>
                                 </div>
 
-                                {{-- Konfigurasi Gemini CLI / Antigravity --}}
-                                <details class="group/cli rounded-[10px] border border-[#e9ebf0] bg-[#f8f9fa] px-3.5">
-                                    <summary class="flex min-h-[42px] cursor-pointer list-none items-center justify-between py-2.5 text-[12px] font-semibold text-[#111827]">
-                                        <span>Untuk Gemini CLI atau Antigravity (pakai Bearer Token)</span>
-                                        <i class="fas fa-chevron-down text-[10px] text-[#7f837e] transition-transform group-open/cli:rotate-180" aria-hidden="true"></i>
-                                    </summary>
-                                    <div class="space-y-2.5 pb-3.5">
-                                        <p class="text-[12px] text-[#53565a]">Tambahkan konfigurasi berikut ke <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">mcp_config.json</code> (Antigravity) atau <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">.gemini/settings.json</code> (Gemini CLI), lalu ganti <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#c94d00]">${OQARI_MCP_TOKEN}</code> dengan kunci akses Anda:</p>
-                                        <textarea id="mcp-gemini-config" x-ref="command" class="{{ $field }} bg-white font-mono text-[12px]" readonly rows="8">{{ $claudeConfig }}</textarea>
-                                        <button type="button" class="{{ $secondaryButton }}" @click="copy('command', 'Konfigurasi')">
-                                            <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
-                                            <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
-                                        </button>
-                                    </div>
-                                </details>
+                                {{-- Cara 2: Konfigurasi JSON (Gemini CLI / Antigravity) --}}
+                                <div class="space-y-2 border-t border-[#f1f3f5] pt-4">
+                                    <p class="text-[12px] font-bold text-[#111827]">2. Atau pasang lewat file konfigurasi JSON</p>
+                                    <p class="text-[13px] text-[#53565a]">Tambahkan konfigurasi berikut ke <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px]">~/.gemini/settings.json</code> (Gemini CLI) atau <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px]">mcp_config.json</code> (Antigravity):</p>
+                                    <label class="sr-only" for="mcp-gemini-config">Konfigurasi JSON Gemini</label>
+                                    <textarea id="mcp-gemini-config" x-ref="command" class="{{ $field }} font-mono text-[12px]" readonly rows="8">{{ $claudeConfig }}</textarea>
+                                    <button type="button" class="{{ $secondaryButton }}" @click="copy('command', 'Konfigurasi')">
+                                        <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                        <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
+                                    </button>
+                                </div>
                             @elseif($client === 'claude-code')
                                 <p class="text-[13px] text-[#53565a]">Simpan kunci sebagai variabel lingkungan <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI_MCP_TOKEN</code>. Tambahkan entri ini ke <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px]">.mcp.json</code> di folder proyek, lalu buka Claude Code dan cek <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px]">/mcp</code>.</p>
                                 <label class="sr-only" for="mcp-config">Konfigurasi Claude Code</label>
@@ -510,12 +492,12 @@
                                     </ol>
                                 </div>
                             @elseif($client === 'gemini')
-                                {{-- Ringkasan Konfigurasi MCP OQARI --}}
+                                {{-- Ringkasan Konfigurasi MCP OQARI untuk Gemini CLI & Antigravity --}}
                                 <div class="space-y-3 rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4">
                                     <div class="flex flex-wrap items-center justify-between gap-2">
                                         <div>
-                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Custom App (MCP)</p>
-                                            <p class="text-[12px] text-[#53565a]">Mendukung Gemini Web (tersinkron ke aplikasi mobile), Gemini CLI, dan Antigravity.</p>
+                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Gemini CLI &amp; Antigravity</p>
+                                            <p class="text-[12px] text-[#53565a]">Gunakan <strong>Gemini CLI</strong>, <strong>Antigravity</strong>, atau <strong>Gemini Code Assist</strong>. (Gemini Web di <code>gemini.google.com</code> saat ini belum mendukung URL MCP kustom.)</p>
                                         </div>
                                         <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-1 text-[11px] font-semibold text-[#df5826]">
                                             <span class="h-1.5 w-1.5 rounded-full bg-[#df5826]" aria-hidden="true"></span>
@@ -530,49 +512,31 @@
                                             <span x-text="copied === 'endpoint' ? 'URL tersalin' : 'Salin URL'">Salin URL</span>
                                         </button>
                                     </div>
-                                    <div class="grid gap-2 text-[12px] sm:grid-cols-3">
-                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
-                                            <p class="text-[11px] text-[#7f837e]">Autentikasi</p>
-                                            <p class="font-semibold text-[#111827]">OAuth (Web) · Bearer (CLI)</p>
-                                        </div>
-                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
-                                            <p class="text-[11px] text-[#7f837e]">Hak Akses</p>
-                                            <p class="font-semibold text-[#111827]">Akses baca (Read-only)</p>
-                                        </div>
-                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
-                                            <p class="text-[11px] text-[#7f837e]">Cakupan & Masa Berlaku</p>
-                                            <p class="font-semibold text-[#111827]">{{ $hasBranches ? $branches->count().' outlet' : 'Outlet utama' }} · {{ config('oqari_mcp.token_days') }} hari</p>
-                                        </div>
-                                    </div>
                                 </div>
 
-                                {{-- Langkah Pemasangan Gemini Web --}}
+                                {{-- Cara 1: Perintah Gemini CLI --}}
                                 <div class="space-y-2">
-                                    <p class="text-[12px] font-bold text-[#111827]">Cara pasang di Gemini Web (gemini.google.com)</p>
-                                    <ol class="list-decimal space-y-1.5 pl-5 text-[13px] text-[#53565a]">
-                                        <li>Buka <strong class="text-[#111827]">gemini.google.com</strong> → klik <strong class="text-[#111827]">Settings</strong> di pojok kiri bawah → pilih <strong class="text-[#111827]">Connected Apps</strong>.</li>
-                                        <li>Pada bagian <strong class="text-[#111827]">Custom apps</strong>, klik <strong class="text-[#111827]">Add a custom app</strong>.</li>
-                                        <li>Masukkan nama <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI Advance</code> dan tempel <strong class="text-[#111827]">Server URL</strong> di atas.</li>
-                                        <li>Selesaikan autentikasi (atau buka <strong class="text-[#111827]">Advanced features</strong> jika diminta kredensial OAuth), lalu klik <strong class="text-[#111827]">Next</strong>.</li>
-                                        <li>Panggil di chat dengan mengetik <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">@OQARI Advance</code> atau langsung ajukan pertanyaan contoh di bawah.</li>
-                                    </ol>
+                                    <p class="text-[12px] font-bold text-[#111827]">1. Pasang cepat lewat Gemini CLI</p>
+                                    <p class="text-[13px] text-[#53565a]">Simpan kunci akses sebagai variabel lingkungan <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI_MCP_TOKEN</code>, lalu jalankan perintah ini di terminal:</p>
+                                    <label class="sr-only" for="mcp-gemini-cli">Perintah Gemini CLI</label>
+                                    <textarea id="mcp-gemini-cli" x-ref="geminiCli" class="{{ $field }} font-mono text-[12px]" readonly rows="2">gemini mcp add --transport http oqari {{ $endpoint }} -H "Authorization: Bearer ${OQARI_MCP_TOKEN}"</textarea>
+                                    <button type="button" class="{{ $secondaryButton }}" @click="copy('geminiCli', 'Perintah Gemini CLI')">
+                                        <i class="fas text-[12px]" :class="copied === 'geminiCli' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                        <span x-text="copied === 'geminiCli' ? 'Perintah tersalin' : 'Salin perintah Gemini CLI'">Salin perintah Gemini CLI</span>
+                                    </button>
                                 </div>
 
-                                {{-- Konfigurasi Gemini CLI / Antigravity --}}
-                                <details class="group/cli rounded-[10px] border border-[#e9ebf0] bg-[#f8f9fa] px-3.5">
-                                    <summary class="flex min-h-[42px] cursor-pointer list-none items-center justify-between py-2.5 text-[12px] font-semibold text-[#111827]">
-                                        <span>Untuk Gemini CLI atau Antigravity (pakai Bearer Token)</span>
-                                        <i class="fas fa-chevron-down text-[10px] text-[#7f837e] transition-transform group-open/cli:rotate-180" aria-hidden="true"></i>
-                                    </summary>
-                                    <div class="space-y-2.5 pb-3.5">
-                                        <p class="text-[12px] text-[#53565a]">Tambahkan konfigurasi berikut ke <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">mcp_config.json</code> (Antigravity) atau <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">.gemini/settings.json</code> (Gemini CLI), lalu ganti <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#c94d00]">${OQARI_MCP_TOKEN}</code> dengan kunci akses Anda:</p>
-                                        <textarea id="mcp-gemini-config" x-ref="command" class="{{ $field }} bg-white font-mono text-[12px]" readonly rows="8">{{ $claudeConfig }}</textarea>
-                                        <button type="button" class="{{ $secondaryButton }}" @click="copy('command', 'Konfigurasi')">
-                                            <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
-                                            <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
-                                        </button>
-                                    </div>
-                                </details>
+                                {{-- Cara 2: Konfigurasi JSON (Gemini CLI / Antigravity) --}}
+                                <div class="space-y-2 border-t border-[#f1f3f5] pt-4">
+                                    <p class="text-[12px] font-bold text-[#111827]">2. Atau pasang lewat file konfigurasi JSON</p>
+                                    <p class="text-[13px] text-[#53565a]">Tambahkan konfigurasi berikut ke <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px]">~/.gemini/settings.json</code> (Gemini CLI) atau <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px]">mcp_config.json</code> (Antigravity):</p>
+                                    <label class="sr-only" for="mcp-gemini-config">Konfigurasi JSON Gemini</label>
+                                    <textarea id="mcp-gemini-config" x-ref="command" class="{{ $field }} font-mono text-[12px]" readonly rows="8">{{ $claudeConfig }}</textarea>
+                                    <button type="button" class="{{ $secondaryButton }}" @click="copy('command', 'Konfigurasi')">
+                                        <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                        <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
+                                    </button>
+                                </div>
                             @else
                                 <p class="text-[13px] text-[#53565a]">Tambahkan server MCP dengan transport <strong class="text-[#111827]">Streamable HTTP</strong>. Masukkan URL di bawah dan pilih autentikasi <strong class="text-[#111827]">Bearer token</strong> dengan kunci OQARI.</p>
                                 <div class="flex flex-col gap-2 sm:flex-row">
@@ -585,7 +549,7 @@
                                 </div>
                             @endif
 
-                            @if(in_array($client, ['codex', 'claude-code'], true))
+                            @if(in_array($client, ['codex', 'claude-code', 'gemini'], true))
                                 <details class="group/win rounded-[10px] border border-[#f1f3f5] bg-[#f8f9fa] px-3.5">
                                     <summary class="flex min-h-[42px] cursor-pointer list-none items-center justify-between py-2.5 text-[12px] font-semibold text-[#111827]">
                                         <span>Cara menyimpan kunci di Windows</span>
@@ -808,12 +772,12 @@
                                     </ol>
                                 </div>
                             @elseif($client === 'gemini')
-                                {{-- Ringkasan Konfigurasi MCP OQARI --}}
+                                {{-- Ringkasan Konfigurasi MCP OQARI untuk Gemini CLI & Antigravity --}}
                                 <div class="space-y-3 rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4">
                                     <div class="flex flex-wrap items-center justify-between gap-2">
                                         <div>
-                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Custom App (MCP)</p>
-                                            <p class="text-[12px] text-[#53565a]">Mendukung Gemini Web (tersinkron ke aplikasi mobile), Gemini CLI, dan Antigravity.</p>
+                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Gemini CLI &amp; Antigravity</p>
+                                            <p class="text-[12px] text-[#53565a]">Gunakan <strong>Gemini CLI</strong>, <strong>Antigravity</strong>, atau <strong>Gemini Code Assist</strong>. (Gemini Web di <code>gemini.google.com</code> saat ini belum mendukung URL MCP kustom.)</p>
                                         </div>
                                         <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-1 text-[11px] font-semibold text-[#df5826]">
                                             <span class="h-1.5 w-1.5 rounded-full bg-[#df5826]" aria-hidden="true"></span>
@@ -828,49 +792,31 @@
                                             <span x-text="copied === 'endpoint' ? 'URL tersalin' : 'Salin URL'">Salin URL</span>
                                         </button>
                                     </div>
-                                    <div class="grid gap-2 text-[12px] sm:grid-cols-3">
-                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
-                                            <p class="text-[11px] text-[#7f837e]">Autentikasi</p>
-                                            <p class="font-semibold text-[#111827]">OAuth (Web) · Bearer (CLI)</p>
-                                        </div>
-                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
-                                            <p class="text-[11px] text-[#7f837e]">Hak Akses</p>
-                                            <p class="font-semibold text-[#111827]">Akses baca (Read-only)</p>
-                                        </div>
-                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
-                                            <p class="text-[11px] text-[#7f837e]">Cakupan & Masa Berlaku</p>
-                                            <p class="font-semibold text-[#111827]">{{ $hasBranches ? $branches->count().' outlet' : 'Outlet utama' }} · {{ config('oqari_mcp.token_days') }} hari</p>
-                                        </div>
-                                    </div>
                                 </div>
 
-                                {{-- Langkah Pemasangan Gemini Web --}}
+                                {{-- Cara 1: Perintah Gemini CLI --}}
                                 <div class="space-y-2">
-                                    <p class="text-[12px] font-bold text-[#111827]">Cara pasang di Gemini Web (gemini.google.com)</p>
-                                    <ol class="list-decimal space-y-1.5 pl-5 text-[13px] text-[#53565a]">
-                                        <li>Buka <strong class="text-[#111827]">gemini.google.com</strong> → klik <strong class="text-[#111827]">Settings</strong> di pojok kiri bawah → pilih <strong class="text-[#111827]">Connected Apps</strong>.</li>
-                                        <li>Pada bagian <strong class="text-[#111827]">Custom apps</strong>, klik <strong class="text-[#111827]">Add a custom app</strong>.</li>
-                                        <li>Masukkan nama <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI Advance</code> dan tempel <strong class="text-[#111827]">Server URL</strong> di atas.</li>
-                                        <li>Selesaikan autentikasi (atau buka <strong class="text-[#111827]">Advanced features</strong> jika diminta kredensial OAuth), lalu klik <strong class="text-[#111827]">Next</strong>.</li>
-                                        <li>Panggil di chat dengan mengetik <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">@OQARI Advance</code> atau langsung ajukan pertanyaan contoh di bawah.</li>
-                                    </ol>
+                                    <p class="text-[12px] font-bold text-[#111827]">1. Pasang cepat lewat Gemini CLI</p>
+                                    <p class="text-[13px] text-[#53565a]">Simpan kunci akses sebagai variabel lingkungan <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI_MCP_TOKEN</code>, lalu jalankan perintah ini di terminal:</p>
+                                    <label class="sr-only" for="mcp-gemini-cli">Perintah Gemini CLI</label>
+                                    <textarea id="mcp-gemini-cli" x-ref="geminiCli" class="{{ $field }} font-mono text-[12px]" readonly rows="2">gemini mcp add --transport http oqari {{ $endpoint }} -H "Authorization: Bearer ${OQARI_MCP_TOKEN}"</textarea>
+                                    <button type="button" class="{{ $secondaryButton }}" @click="copy('geminiCli', 'Perintah Gemini CLI')">
+                                        <i class="fas text-[12px]" :class="copied === 'geminiCli' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                        <span x-text="copied === 'geminiCli' ? 'Perintah tersalin' : 'Salin perintah Gemini CLI'">Salin perintah Gemini CLI</span>
+                                    </button>
                                 </div>
 
-                                {{-- Konfigurasi Gemini CLI / Antigravity --}}
-                                <details class="group/cli rounded-[10px] border border-[#e9ebf0] bg-[#f8f9fa] px-3.5">
-                                    <summary class="flex min-h-[42px] cursor-pointer list-none items-center justify-between py-2.5 text-[12px] font-semibold text-[#111827]">
-                                        <span>Untuk Gemini CLI atau Antigravity (pakai Bearer Token)</span>
-                                        <i class="fas fa-chevron-down text-[10px] text-[#7f837e] transition-transform group-open/cli:rotate-180" aria-hidden="true"></i>
-                                    </summary>
-                                    <div class="space-y-2.5 pb-3.5">
-                                        <p class="text-[12px] text-[#53565a]">Tambahkan konfigurasi berikut ke <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">mcp_config.json</code> (Antigravity) atau <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">.gemini/settings.json</code> (Gemini CLI), lalu ganti <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#c94d00]">${OQARI_MCP_TOKEN}</code> dengan kunci akses Anda:</p>
-                                        <textarea id="mcp-gemini-config" x-ref="command" class="{{ $field }} bg-white font-mono text-[12px]" readonly rows="8">{{ $claudeConfig }}</textarea>
-                                        <button type="button" class="{{ $secondaryButton }}" @click="copy('command', 'Konfigurasi')">
-                                            <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
-                                            <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
-                                        </button>
-                                    </div>
-                                </details>
+                                {{-- Cara 2: Konfigurasi JSON (Gemini CLI / Antigravity) --}}
+                                <div class="space-y-2 border-t border-[#f1f3f5] pt-4">
+                                    <p class="text-[12px] font-bold text-[#111827]">2. Atau pasang lewat file konfigurasi JSON</p>
+                                    <p class="text-[13px] text-[#53565a]">Tambahkan konfigurasi berikut ke <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px]">~/.gemini/settings.json</code> (Gemini CLI) atau <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px]">mcp_config.json</code> (Antigravity):</p>
+                                    <label class="sr-only" for="mcp-gemini-config">Konfigurasi JSON Gemini</label>
+                                    <textarea id="mcp-gemini-config" x-ref="command" class="{{ $field }} font-mono text-[12px]" readonly rows="8">{{ $claudeConfig }}</textarea>
+                                    <button type="button" class="{{ $secondaryButton }}" @click="copy('command', 'Konfigurasi')">
+                                        <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                        <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
+                                    </button>
+                                </div>
                             @elseif($expired)
                                         <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold text-amber-700">{{ $status }}</span>
                                     @elseif($client === 'chatgpt')
@@ -946,12 +892,12 @@
                                     </ol>
                                 </div>
                             @elseif($client === 'gemini')
-                                {{-- Ringkasan Konfigurasi MCP OQARI --}}
+                                {{-- Ringkasan Konfigurasi MCP OQARI untuk Gemini CLI & Antigravity --}}
                                 <div class="space-y-3 rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4">
                                     <div class="flex flex-wrap items-center justify-between gap-2">
                                         <div>
-                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Custom App (MCP)</p>
-                                            <p class="text-[12px] text-[#53565a]">Mendukung Gemini Web (tersinkron ke aplikasi mobile), Gemini CLI, dan Antigravity.</p>
+                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Gemini CLI &amp; Antigravity</p>
+                                            <p class="text-[12px] text-[#53565a]">Gunakan <strong>Gemini CLI</strong>, <strong>Antigravity</strong>, atau <strong>Gemini Code Assist</strong>. (Gemini Web di <code>gemini.google.com</code> saat ini belum mendukung URL MCP kustom.)</p>
                                         </div>
                                         <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-1 text-[11px] font-semibold text-[#df5826]">
                                             <span class="h-1.5 w-1.5 rounded-full bg-[#df5826]" aria-hidden="true"></span>
@@ -966,49 +912,31 @@
                                             <span x-text="copied === 'endpoint' ? 'URL tersalin' : 'Salin URL'">Salin URL</span>
                                         </button>
                                     </div>
-                                    <div class="grid gap-2 text-[12px] sm:grid-cols-3">
-                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
-                                            <p class="text-[11px] text-[#7f837e]">Autentikasi</p>
-                                            <p class="font-semibold text-[#111827]">OAuth (Web) · Bearer (CLI)</p>
-                                        </div>
-                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
-                                            <p class="text-[11px] text-[#7f837e]">Hak Akses</p>
-                                            <p class="font-semibold text-[#111827]">Akses baca (Read-only)</p>
-                                        </div>
-                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
-                                            <p class="text-[11px] text-[#7f837e]">Cakupan & Masa Berlaku</p>
-                                            <p class="font-semibold text-[#111827]">{{ $hasBranches ? $branches->count().' outlet' : 'Outlet utama' }} · {{ config('oqari_mcp.token_days') }} hari</p>
-                                        </div>
-                                    </div>
                                 </div>
 
-                                {{-- Langkah Pemasangan Gemini Web --}}
+                                {{-- Cara 1: Perintah Gemini CLI --}}
                                 <div class="space-y-2">
-                                    <p class="text-[12px] font-bold text-[#111827]">Cara pasang di Gemini Web (gemini.google.com)</p>
-                                    <ol class="list-decimal space-y-1.5 pl-5 text-[13px] text-[#53565a]">
-                                        <li>Buka <strong class="text-[#111827]">gemini.google.com</strong> → klik <strong class="text-[#111827]">Settings</strong> di pojok kiri bawah → pilih <strong class="text-[#111827]">Connected Apps</strong>.</li>
-                                        <li>Pada bagian <strong class="text-[#111827]">Custom apps</strong>, klik <strong class="text-[#111827]">Add a custom app</strong>.</li>
-                                        <li>Masukkan nama <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI Advance</code> dan tempel <strong class="text-[#111827]">Server URL</strong> di atas.</li>
-                                        <li>Selesaikan autentikasi (atau buka <strong class="text-[#111827]">Advanced features</strong> jika diminta kredensial OAuth), lalu klik <strong class="text-[#111827]">Next</strong>.</li>
-                                        <li>Panggil di chat dengan mengetik <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">@OQARI Advance</code> atau langsung ajukan pertanyaan contoh di bawah.</li>
-                                    </ol>
+                                    <p class="text-[12px] font-bold text-[#111827]">1. Pasang cepat lewat Gemini CLI</p>
+                                    <p class="text-[13px] text-[#53565a]">Simpan kunci akses sebagai variabel lingkungan <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI_MCP_TOKEN</code>, lalu jalankan perintah ini di terminal:</p>
+                                    <label class="sr-only" for="mcp-gemini-cli">Perintah Gemini CLI</label>
+                                    <textarea id="mcp-gemini-cli" x-ref="geminiCli" class="{{ $field }} font-mono text-[12px]" readonly rows="2">gemini mcp add --transport http oqari {{ $endpoint }} -H "Authorization: Bearer ${OQARI_MCP_TOKEN}"</textarea>
+                                    <button type="button" class="{{ $secondaryButton }}" @click="copy('geminiCli', 'Perintah Gemini CLI')">
+                                        <i class="fas text-[12px]" :class="copied === 'geminiCli' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                        <span x-text="copied === 'geminiCli' ? 'Perintah tersalin' : 'Salin perintah Gemini CLI'">Salin perintah Gemini CLI</span>
+                                    </button>
                                 </div>
 
-                                {{-- Konfigurasi Gemini CLI / Antigravity --}}
-                                <details class="group/cli rounded-[10px] border border-[#e9ebf0] bg-[#f8f9fa] px-3.5">
-                                    <summary class="flex min-h-[42px] cursor-pointer list-none items-center justify-between py-2.5 text-[12px] font-semibold text-[#111827]">
-                                        <span>Untuk Gemini CLI atau Antigravity (pakai Bearer Token)</span>
-                                        <i class="fas fa-chevron-down text-[10px] text-[#7f837e] transition-transform group-open/cli:rotate-180" aria-hidden="true"></i>
-                                    </summary>
-                                    <div class="space-y-2.5 pb-3.5">
-                                        <p class="text-[12px] text-[#53565a]">Tambahkan konfigurasi berikut ke <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">mcp_config.json</code> (Antigravity) atau <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">.gemini/settings.json</code> (Gemini CLI), lalu ganti <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#c94d00]">${OQARI_MCP_TOKEN}</code> dengan kunci akses Anda:</p>
-                                        <textarea id="mcp-gemini-config" x-ref="command" class="{{ $field }} bg-white font-mono text-[12px]" readonly rows="8">{{ $claudeConfig }}</textarea>
-                                        <button type="button" class="{{ $secondaryButton }}" @click="copy('command', 'Konfigurasi')">
-                                            <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
-                                            <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
-                                        </button>
-                                    </div>
-                                </details>
+                                {{-- Cara 2: Konfigurasi JSON (Gemini CLI / Antigravity) --}}
+                                <div class="space-y-2 border-t border-[#f1f3f5] pt-4">
+                                    <p class="text-[12px] font-bold text-[#111827]">2. Atau pasang lewat file konfigurasi JSON</p>
+                                    <p class="text-[13px] text-[#53565a]">Tambahkan konfigurasi berikut ke <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px]">~/.gemini/settings.json</code> (Gemini CLI) atau <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px]">mcp_config.json</code> (Antigravity):</p>
+                                    <label class="sr-only" for="mcp-gemini-config">Konfigurasi JSON Gemini</label>
+                                    <textarea id="mcp-gemini-config" x-ref="command" class="{{ $field }} font-mono text-[12px]" readonly rows="8">{{ $claudeConfig }}</textarea>
+                                    <button type="button" class="{{ $secondaryButton }}" @click="copy('command', 'Konfigurasi')">
+                                        <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                        <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
+                                    </button>
+                                </div>
                             @elseif($connection->last_used_at)
                                         <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
                                             <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
@@ -1087,12 +1015,12 @@
                                     </ol>
                                 </div>
                             @elseif($client === 'gemini')
-                                {{-- Ringkasan Konfigurasi MCP OQARI --}}
+                                {{-- Ringkasan Konfigurasi MCP OQARI untuk Gemini CLI & Antigravity --}}
                                 <div class="space-y-3 rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4">
                                     <div class="flex flex-wrap items-center justify-between gap-2">
                                         <div>
-                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Custom App (MCP)</p>
-                                            <p class="text-[12px] text-[#53565a]">Mendukung Gemini Web (tersinkron ke aplikasi mobile), Gemini CLI, dan Antigravity.</p>
+                                            <p class="text-[13px] font-bold text-[#111827]">OQARI Advance · Gemini CLI &amp; Antigravity</p>
+                                            <p class="text-[12px] text-[#53565a]">Gunakan <strong>Gemini CLI</strong>, <strong>Antigravity</strong>, atau <strong>Gemini Code Assist</strong>. (Gemini Web di <code>gemini.google.com</code> saat ini belum mendukung URL MCP kustom.)</p>
                                         </div>
                                         <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-1 text-[11px] font-semibold text-[#df5826]">
                                             <span class="h-1.5 w-1.5 rounded-full bg-[#df5826]" aria-hidden="true"></span>
@@ -1107,49 +1035,31 @@
                                             <span x-text="copied === 'endpoint' ? 'URL tersalin' : 'Salin URL'">Salin URL</span>
                                         </button>
                                     </div>
-                                    <div class="grid gap-2 text-[12px] sm:grid-cols-3">
-                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
-                                            <p class="text-[11px] text-[#7f837e]">Autentikasi</p>
-                                            <p class="font-semibold text-[#111827]">OAuth (Web) · Bearer (CLI)</p>
-                                        </div>
-                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
-                                            <p class="text-[11px] text-[#7f837e]">Hak Akses</p>
-                                            <p class="font-semibold text-[#111827]">Akses baca (Read-only)</p>
-                                        </div>
-                                        <div class="rounded-[8px] border border-[#e9ebf0] bg-white px-3 py-2">
-                                            <p class="text-[11px] text-[#7f837e]">Cakupan & Masa Berlaku</p>
-                                            <p class="font-semibold text-[#111827]">{{ $hasBranches ? $branches->count().' outlet' : 'Outlet utama' }} · {{ config('oqari_mcp.token_days') }} hari</p>
-                                        </div>
-                                    </div>
                                 </div>
 
-                                {{-- Langkah Pemasangan Gemini Web --}}
+                                {{-- Cara 1: Perintah Gemini CLI --}}
                                 <div class="space-y-2">
-                                    <p class="text-[12px] font-bold text-[#111827]">Cara pasang di Gemini Web (gemini.google.com)</p>
-                                    <ol class="list-decimal space-y-1.5 pl-5 text-[13px] text-[#53565a]">
-                                        <li>Buka <strong class="text-[#111827]">gemini.google.com</strong> → klik <strong class="text-[#111827]">Settings</strong> di pojok kiri bawah → pilih <strong class="text-[#111827]">Connected Apps</strong>.</li>
-                                        <li>Pada bagian <strong class="text-[#111827]">Custom apps</strong>, klik <strong class="text-[#111827]">Add a custom app</strong>.</li>
-                                        <li>Masukkan nama <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI Advance</code> dan tempel <strong class="text-[#111827]">Server URL</strong> di atas.</li>
-                                        <li>Selesaikan autentikasi (atau buka <strong class="text-[#111827]">Advanced features</strong> jika diminta kredensial OAuth), lalu klik <strong class="text-[#111827]">Next</strong>.</li>
-                                        <li>Panggil di chat dengan mengetik <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">@OQARI Advance</code> atau langsung ajukan pertanyaan contoh di bawah.</li>
-                                    </ol>
+                                    <p class="text-[12px] font-bold text-[#111827]">1. Pasang cepat lewat Gemini CLI</p>
+                                    <p class="text-[13px] text-[#53565a]">Simpan kunci akses sebagai variabel lingkungan <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px] text-[#c94d00]">OQARI_MCP_TOKEN</code>, lalu jalankan perintah ini di terminal:</p>
+                                    <label class="sr-only" for="mcp-gemini-cli">Perintah Gemini CLI</label>
+                                    <textarea id="mcp-gemini-cli" x-ref="geminiCli" class="{{ $field }} font-mono text-[12px]" readonly rows="2">gemini mcp add --transport http oqari {{ $endpoint }} -H "Authorization: Bearer ${OQARI_MCP_TOKEN}"</textarea>
+                                    <button type="button" class="{{ $secondaryButton }}" @click="copy('geminiCli', 'Perintah Gemini CLI')">
+                                        <i class="fas text-[12px]" :class="copied === 'geminiCli' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                        <span x-text="copied === 'geminiCli' ? 'Perintah tersalin' : 'Salin perintah Gemini CLI'">Salin perintah Gemini CLI</span>
+                                    </button>
                                 </div>
 
-                                {{-- Konfigurasi Gemini CLI / Antigravity --}}
-                                <details class="group/cli rounded-[10px] border border-[#e9ebf0] bg-[#f8f9fa] px-3.5">
-                                    <summary class="flex min-h-[42px] cursor-pointer list-none items-center justify-between py-2.5 text-[12px] font-semibold text-[#111827]">
-                                        <span>Untuk Gemini CLI atau Antigravity (pakai Bearer Token)</span>
-                                        <i class="fas fa-chevron-down text-[10px] text-[#7f837e] transition-transform group-open/cli:rotate-180" aria-hidden="true"></i>
-                                    </summary>
-                                    <div class="space-y-2.5 pb-3.5">
-                                        <p class="text-[12px] text-[#53565a]">Tambahkan konfigurasi berikut ke <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">mcp_config.json</code> (Antigravity) atau <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px]">.gemini/settings.json</code> (Gemini CLI), lalu ganti <code class="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#c94d00]">${OQARI_MCP_TOKEN}</code> dengan kunci akses Anda:</p>
-                                        <textarea id="mcp-gemini-config" x-ref="command" class="{{ $field }} bg-white font-mono text-[12px]" readonly rows="8">{{ $claudeConfig }}</textarea>
-                                        <button type="button" class="{{ $secondaryButton }}" @click="copy('command', 'Konfigurasi')">
-                                            <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
-                                            <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
-                                        </button>
-                                    </div>
-                                </details>
+                                {{-- Cara 2: Konfigurasi JSON (Gemini CLI / Antigravity) --}}
+                                <div class="space-y-2 border-t border-[#f1f3f5] pt-4">
+                                    <p class="text-[12px] font-bold text-[#111827]">2. Atau pasang lewat file konfigurasi JSON</p>
+                                    <p class="text-[13px] text-[#53565a]">Tambahkan konfigurasi berikut ke <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px]">~/.gemini/settings.json</code> (Gemini CLI) atau <code class="rounded bg-[#f8f9fa] px-1.5 py-0.5 font-mono text-[12px]">mcp_config.json</code> (Antigravity):</p>
+                                    <label class="sr-only" for="mcp-gemini-config">Konfigurasi JSON Gemini</label>
+                                    <textarea id="mcp-gemini-config" x-ref="command" class="{{ $field }} font-mono text-[12px]" readonly rows="8">{{ $claudeConfig }}</textarea>
+                                    <button type="button" class="{{ $secondaryButton }}" @click="copy('command', 'Konfigurasi')">
+                                        <i class="fas text-[12px]" :class="copied === 'command' ? 'fa-check text-emerald-600' : 'fa-copy'" aria-hidden="true"></i>
+                                        <span x-text="copied === 'command' ? 'Konfigurasi tersalin' : 'Salin konfigurasi'">Salin konfigurasi</span>
+                                    </button>
+                                </div>
                             @else
                                         <span class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-[10px] font-semibold text-sky-700">{{ $status }}</span>
                                     @endif

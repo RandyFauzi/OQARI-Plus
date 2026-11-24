@@ -497,8 +497,8 @@ class OqariMcpTest extends TestCase
             ->get(route('admin.integrations.mcp', ['client' => 'gemini']))
             ->assertOk()
             ->assertSee('Hubungkan Gemini')
-            ->assertSee('Cara pasang di Gemini Web (gemini.google.com)')
-            ->assertSee('Add a custom app');
+            ->assertSee('Pasang cepat lewat Gemini CLI')
+            ->assertSee('gemini mcp add --transport http oqari');
     }
 
     public function test_dynamic_client_registration_supports_chatgpt_redirect_and_pkce_flow(): void
