@@ -43,6 +43,7 @@ class SubmitPosOrder
             if (! empty($data['recalled_order_id'])) {
                 $order = Order::where('shop_id', $shop->id)
                     ->whereKey($data['recalled_order_id'])->lockForUpdate()->firstOrFail();
+                abort_if($order->isAwaitingStaticQrisPayment(), 422, 'Konfirmasi pembayaran QRIS dari daftar pembayaran masuk.');
                 if ($order->payment_status !== 'UNPAID' || in_array($order->order_status, ['COMPLETED', 'CANCELLED'], true)) {
                     throw ValidationException::withMessages(['recalled_order_id' => 'Pesanan sudah diproses atau lunas.']);
                 }

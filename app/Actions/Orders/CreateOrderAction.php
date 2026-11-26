@@ -3,6 +3,7 @@
 namespace App\Actions\Orders;
 
 use App\Models\ActivityLog;
+use App\Models\Branch;
 use App\Models\Modifier;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -17,20 +18,36 @@ use App\Services\InventoryService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 
 class CreateOrderAction
 {
     /**
      * Mengeksekusi pembuatan pesanan dengan segala rules domainnya.
      */
-    public function execute(Shop $shop, array $data, $fulfillmentType = 'DINE_IN'): Order
+    public function execute(Shop $shop, array $data, string $fulfillmentType = 'DINE_IN'): Order
     {
         return DB::transaction(function () use ($shop, $data, $fulfillmentType) {
-            if (! empty($data['request_id'])) {
+            $usesStaticQris = $data['payment_method'] === 'QRIS';
+            $branch = app(BranchContext::class)->branch();
+            if ($usesStaticQris || ! empty($data['request_id'])) {
                 Shop::whereKey($shop->id)->lockForUpdate()->firstOrFail();
-                $order = Order::where('shop_id', $shop->id)->where('qr_request_id', $data['request_id'])->first();
+            }
+            if (! empty($data['request_id'])) {
+                $order = Order::withoutGlobalScope('branch')->where('shop_id', $shop->id)->where('qr_request_id', $data['request_id'])->first();
                 if ($order) {
+                    abort_unless($order->branch_id === $branch?->id, 404);
+
                     return $order;
+                }
+            }
+
+            $qrisPath = null;
+            if ($usesStaticQris) {
+                $qrisPath = Branch::where('shop_id', $shop->id)->whereKey($branch?->id)
+                    ->where('is_active', true)->lockForUpdate()->value('static_qris_path');
+                if (! $qrisPath) {
+                    throw ValidationException::withMessages(['payment_method' => 'QRIS statis belum tersedia di outlet ini.']);
                 }
             }
 
@@ -48,7 +65,6 @@ class CreateOrderAction
             $totalCogs = 0;
             $orderItems = [];
 
-            $branch = app(BranchContext::class)->branch();
             $menuResolver = app(BranchMenuResolver::class);
 
             foreach ($data['items'] as $item) {
@@ -148,6 +164,7 @@ class CreateOrderAction
             }
 
             $grandTotal = max(0, $total - $discountAmount);
+            $awaitsPayment = $usesStaticQris && $grandTotal > 0;
 
             // 4. Create the Order Parent
             $order = Order::create([
@@ -158,17 +175,19 @@ class CreateOrderAction
                 'customer_email' => $data['customer_email'] ?? null,
                 'customer_phone' => $data['customer_phone'] ?? null,
                 'payment_method' => $data['payment_method'],
+                'payment_channel' => $usesStaticQris ? Order::StaticQrisChannel : null,
+                'payment_qr_path' => $awaitsPayment ? $qrisPath : null,
                 'subtotal' => $total,
                 'discount_amount' => $discountAmount,
                 'voucher_code' => $voucher?->code,
                 'discount_reason' => $voucher?->name,
                 'grand_total' => $grandTotal,
-                'amount_paid' => $grandTotal,
+                'amount_paid' => $awaitsPayment ? 0 : $grandTotal,
                 'change_amount' => 0,
                 'total_cogs' => $totalCogs,
-                'order_status' => 'CONFIRMED',
-                'payment_status' => 'PAID',
-                'paid_at' => now(),
+                'order_status' => $awaitsPayment ? 'HOLD' : 'CONFIRMED',
+                'payment_status' => $awaitsPayment ? 'UNPAID' : 'PAID',
+                'paid_at' => $awaitsPayment ? null : now(),
                 'fulfillment_type' => $fulfillmentType,
             ]);
 
@@ -193,7 +212,9 @@ class CreateOrderAction
             $order->load('items.product');
 
             // Deduct inventory stock based on recipes
-            app(InventoryService::class)->deductStockForOrder($order);
+            if (! $awaitsPayment) {
+                app(InventoryService::class)->deductStockForOrder($order);
+            }
 
             if (class_exists(ActivityLog::class)) {
                 $tableLabel = $tableModel ? 'Meja '.$tableModel->name : ($order->fulfillment_type === 'TAKEAWAY' ? 'Takeaway' : 'Tanpa Meja');

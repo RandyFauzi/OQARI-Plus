@@ -7,6 +7,7 @@ use App\Events\OrderCreated;
 use App\Jobs\SendOrderReceiptEmail;
 use App\Models\Branch;
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Models\ShopSlugHistory;
@@ -15,9 +16,11 @@ use App\Models\Voucher;
 use App\Services\BranchContext;
 use App\Services\BranchMenuResolver;
 use App\Services\BranchStorefrontResolver;
+use App\Services\MediaService;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
 
 class ShopController extends Controller
@@ -165,7 +168,9 @@ class ShopController extends Controller
             $shop = app(BranchStorefrontResolver::class)->apply($shop, $activeBranch);
         }
 
-        return view('shop.cart', compact('shop', 'activeBranch'));
+        $staticQrisAvailable = filled($activeBranch?->static_qris_path);
+
+        return view('shop.cart', compact('shop', 'activeBranch', 'staticQrisAvailable'));
     }
 
     public function trackingBranch(Request $request, string $slug, string $branchSlug)
@@ -181,7 +186,20 @@ class ShopController extends Controller
             $shop = app(BranchStorefrontResolver::class)->apply($shop, $activeBranch);
         }
 
-        return view('shop.tracking', compact('shop', 'activeBranch'));
+        $trackedOrder = null;
+        $staticQrisUrl = null;
+        if ($request->has('order')) {
+            abort_unless($activeBranch && $request->hasValidSignature(), 403);
+            $trackedOrder = Order::where('shop_id', $shop->id)->where('branch_id', $activeBranch->id)
+                ->where('payment_channel', Order::StaticQrisChannel)->findOrFail($request->query('order'));
+            if ($trackedOrder->isAwaitingStaticQrisPayment()) {
+                $staticQrisUrl = app(MediaService::class)->url($trackedOrder->payment_qr_path);
+            }
+        }
+
+        return response()->view('shop.tracking', compact('shop', 'activeBranch', 'trackedOrder', 'staticQrisUrl'))
+            ->header('Cache-Control', 'private, no-store')
+            ->header('Referrer-Policy', 'no-referrer');
     }
 
     public function submitOrderBranch(Request $request, string $slug, string $branchSlug, CreateOrderAction $createOrder)
@@ -192,6 +210,9 @@ class ShopController extends Controller
     public function submitOrder(Request $request, $slug, CreateOrderAction $createOrder, ?string $branchSlug = null)
     {
         $shop = $this->resolveShop($slug);
+        if (is_string($request->input('payment_method'))) {
+            $request->merge(['payment_method' => strtoupper($request->input('payment_method'))]);
+        }
 
         $validated = $request->validate([
             'request_id' => ['nullable', 'uuid'],
@@ -203,8 +224,7 @@ class ShopController extends Controller
             'customer_phone' => 'nullable|string|max:20',
             'fulfillment_type' => 'nullable|string|in:DINE_IN,TAKEAWAY,DELIVERY',
             'voucher_code' => 'nullable|string|max:50',
-            // TODO: Revert validation to 'required|string|exists:payment_methods,code' when Payment Gateway is active
-            'payment_method' => 'required|string|max:50',
+            'payment_method' => ['required', 'string', 'in:CASH,QRIS'],
             'items' => 'required|array|min:1|max:50',
             'items.*.id' => 'required|exists:products,id',
             'items.*.qty' => 'required|integer|min:1|max:100',
@@ -213,10 +233,10 @@ class ShopController extends Controller
             'items.*.modifiers' => 'nullable|array',
             'items.*.modifiers.*' => 'integer',
         ]);
-
         $fulfillmentType = $validated['fulfillment_type'] ?? 'DINE_IN';
         $context = app(BranchContext::class);
         $context->clear();
+        $branch = null;
         if ($shop->branches_enabled) {
             $tableModel = null;
             if ($fulfillmentType === 'DINE_IN' && ! empty($validated['table_token'])) {
@@ -254,17 +274,22 @@ class ShopController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
 
-        if ($order->wasRecentlyCreated) {
+        if ($order->wasRecentlyCreated && ! $order->isAwaitingStaticQrisPayment()) {
             rescue(fn () => OrderCreated::dispatch($order), report: true);
             if ($order->customer_email) {
                 rescue(fn () => dispatch(new SendOrderReceiptEmail($order->id)), report: true);
             }
         }
 
+        $trackingUrl = $order->payment_channel === Order::StaticQrisChannel
+            ? URL::signedRoute('shop.branch.tracking', ['slug' => $shop->slug, 'branchSlug' => $branch->slug, 'order' => $order->id])
+            : null;
+
         return response()->json([
             'success' => true,
             'message' => 'Order placed successfully',
             'payment_url' => null,
+            'tracking_url' => $trackingUrl,
             'order' => $order,
         ]);
     }

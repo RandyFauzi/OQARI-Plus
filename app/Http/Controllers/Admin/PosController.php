@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Order\CreateOrder;
+use App\Actions\Payment\ConfirmStaticQrisPayment;
 use App\Actions\POS\ApplyDiscount;
 use App\Actions\POS\CalculateCart;
 use App\Actions\POS\RelayCustomerDisplay;
@@ -21,6 +22,7 @@ use App\Models\Table;
 use App\Services\BranchContext;
 use App\Services\BranchMenuResolver;
 use App\Services\InventoryService;
+use App\Services\MediaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,10 +37,11 @@ class PosController extends Controller
     //  VIEW
     // ──────────────────────────────────────────────
 
-    public function index()
+    public function index(BranchContext $branches, MediaService $media)
     {
         $user = Auth::user();
         $shop = $user->shop;
+        $staticQrisUrl = $media->url($branches->branch()?->static_qris_path);
 
         $activeSession = CashRegisterSession::where('user_id', $user->id)
             ->whereHas('register', fn ($query) => $query->where('shop_id', $shop->id))
@@ -75,6 +78,7 @@ class PosController extends Controller
         // Active held orders — show in recall bar
         $heldOrders = Order::where('shop_id', $shop->id)
             ->where('order_status', 'HOLD')
+            ->whereNull('payment_channel')
             ->with(['items', 'table'])
             ->latest()
             ->take(10)
@@ -142,7 +146,7 @@ class PosController extends Controller
         ];
 
         return view('Admin.pos.index', compact(
-            'products', 'categories', 'activeSession', 'heldOrders', 'heldOrderSummaries', 'activeQueueOrders', 'registers', 'shop', 'tables', 'customerScreen'
+            'products', 'categories', 'activeSession', 'heldOrders', 'heldOrderSummaries', 'activeQueueOrders', 'registers', 'shop', 'tables', 'customerScreen', 'staticQrisUrl'
         ));
     }
 
@@ -150,17 +154,18 @@ class PosController extends Controller
     //  API — Submit order + payment in one shot
     // ──────────────────────────────────────────────
 
-    public function customerDisplay(Request $request): View
+    public function customerDisplay(Request $request, BranchContext $branches, MediaService $media): View
     {
         $shop = $request->user()->shop;
 
         return view('Admin.pos.customer-display', [
             'shop' => $shop,
+            'staticQrisUrl' => $media->url($branches->branch()?->static_qris_path),
             'customerScreen' => $this->customerScreenConfig($shop->id, $this->displayTerminal($request)),
         ]);
     }
 
-    public function customerKiosk(Request $request): View
+    public function customerKiosk(Request $request, BranchContext $branches, MediaService $media): View
     {
         $shop = $request->user()->shop;
         $products = Product::where('shop_id', $shop->id)
@@ -172,6 +177,7 @@ class PosController extends Controller
 
         return view('Admin.pos.customer-kiosk', [
             'shop' => $shop,
+            'staticQrisUrl' => $media->url($branches->branch()?->static_qris_path),
             'categories' => collect($catalog)->whereNotNull('category_id')->unique('category_id')
                 ->map(fn (array $product) => ['id' => $product['category_id'], 'name' => $product['category_name']]),
             'customerScreen' => [
@@ -293,6 +299,32 @@ class PosController extends Controller
         ]);
     }
 
+    public function staticQrisOrders(Request $request, BranchContext $branches): JsonResponse
+    {
+        $branchId = $branches->id((int) $request->user()->shop_id);
+        if ($branchId === null) {
+            return response()->json([]);
+        }
+
+        return response()->json(Order::where('shop_id', $request->user()->shop_id)
+            ->where('branch_id', $branchId)->where('payment_channel', Order::StaticQrisChannel)
+            ->where('order_status', 'HOLD')->where('payment_status', 'UNPAID')
+            ->orderByDesc('id')->get(['id', 'customer_name', 'grand_total']));
+    }
+
+    public function confirmStaticQris(Request $request, int $order, BranchContext $branches, ConfirmStaticQrisPayment $action): JsonResponse
+    {
+        $branch = $branches->branch();
+        abort_unless($branch, 404);
+        $data = $request->validate([
+            'reference' => ['required', 'string', 'max:100', 'regex:/\A[A-Za-z0-9._\/-]+\z/'],
+            'received_amount' => ['required', 'numeric', 'decimal:0,2', 'min:0', 'max:9999999999.99'],
+        ]);
+        $order = $action->execute($request->user(), $branch, $order, strtoupper($data['reference']), (float) $data['received_amount']);
+
+        return response()->json(['id' => $order->id, 'payment_status' => $order->payment_status]);
+    }
+
     public function holdOrder(HoldPosOrderRequest $request, CreateOrder $createOrder): JsonResponse
     {
         return DB::transaction(fn () => $this->saveOpenBill($request, $createOrder), 3);
@@ -316,6 +348,7 @@ class PosController extends Controller
                 ->lockForUpdate()->first();
 
             if ($order) {
+                abort_if($order->isAwaitingStaticQrisPayment(), 422, 'Konfirmasi pembayaran QRIS dari daftar pembayaran masuk.');
                 $hasPriceColumn = Schema::hasColumn('order_items', 'price');
                 $hasServingTypeColumn = Schema::hasColumn('order_items', 'serving_type');
                 $hasBatchNoColumn = Schema::hasColumn('order_items', 'batch_no');
@@ -559,6 +592,7 @@ class PosController extends Controller
 
         $orders = Order::where('shop_id', $shopId)
             ->where('order_status', 'HOLD')
+            ->whereNull('payment_channel')
             ->with(['items', 'table'])
             ->latest()
             ->take(20)
@@ -593,7 +627,7 @@ class PosController extends Controller
     {
         $shopId = Auth::user()->shop_id;
 
-        if ($order->shop_id !== $shopId || $order->order_status !== 'HOLD') {
+        if ($order->shop_id !== $shopId || $order->order_status !== 'HOLD' || $order->isAwaitingStaticQrisPayment()) {
             return response()->json(['error' => 'Pesanan tidak ditemukan atau tidak dapat dibatalkan.'], 404);
         }
 
@@ -611,7 +645,7 @@ class PosController extends Controller
         $shopId = Auth::user()->shop_id;
 
         // Tenant check and ensure order is unpaid and not cancelled
-        if ($order->shop_id !== $shopId || $order->payment_status === 'PAID' || $order->order_status === 'CANCELLED') {
+        if ($order->shop_id !== $shopId || $order->payment_status === 'PAID' || $order->order_status === 'CANCELLED' || $order->isAwaitingStaticQrisPayment()) {
             return response()->json(['error' => 'Pesanan tidak ditemukan, sudah lunas, atau dibatalkan.'], 404);
         }
 

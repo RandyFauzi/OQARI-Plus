@@ -1005,7 +1005,7 @@ function renderCartDetail() {
         }
     }
 
-    btnPay.disabled = false;
+    btnPay.disabled = btnPay.hasAttribute('data-qris-unavailable');
     btnPay.classList.remove('opacity-50', 'cursor-not-allowed');
 
     container.innerHTML = cart.map((item, index) => {
@@ -1201,7 +1201,7 @@ function selectOrderType(type) {
     }
 }
 
-function triggerPaymentGateway() {
+function reviewCheckout() {
     const orderType = document.getElementById('order-type')?.value || 'Dine-in';
     const isTakeaway = (orderType.toLowerCase() === 'takeaway');
     const fulfillmentType = isTakeaway ? 'TAKEAWAY' : 'DINE_IN';
@@ -1259,12 +1259,11 @@ function triggerPaymentGateway() {
 
 function cancelPayment() { document.getElementById('modal-payment').classList.add('hidden'); }
 
-function processSimulatedPayment() {
+function submitQrisOrder() {
     const btn = document.getElementById('btn-pay');
     btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Memproses...`;
     btn.disabled = true;
 
-    const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value || 'QRIS';
     const name = localStorage.getItem((window.SHOP_SLUG || 'default') + '_customer_name') || 'Guest';
     const email = localStorage.getItem((window.SHOP_SLUG || 'default') + '_customer_email') || '';
     const phone = localStorage.getItem((window.SHOP_SLUG || 'default') + '_customer_phone') || '';
@@ -1275,21 +1274,22 @@ function processSimulatedPayment() {
     const total = window.currentGrandTotal;
     
     // Create order using database.js engine
-    DB.createOrder(table, name, email, phone, paymentMethod, items, total, fulfillmentType, promo)
+    DB.createOrder(table, name, email, phone, 'QRIS', items, total, fulfillmentType, promo)
         .then(data => {
             localStorage.setItem((window.SHOP_SLUG || 'default') + '_last_order_type', fulfillmentType === 'TAKEAWAY' ? 'Take Away' : 'Dine In');
             localStorage.setItem((window.SHOP_SLUG || 'default') + '_last_order_total', data.order.grand_total);
             CartStore.clear(); 
-            window.location.href = window.SHOP_TRACKING_URL;
+            window.location.href = data.tracking_url || window.SHOP_TRACKING_URL;
         })
         .catch(err => {
-            alert('Gagal membuat pesanan. Silakan coba lagi.');
+            alert(err.message || 'Gagal membuat pesanan. Silakan coba lagi.');
             btn.disabled = false;
-            btn.innerHTML = `Bayar Sekarang`;
+            btn.textContent = 'Buat pesanan';
         });
 }
 
 function initTrackingPage() {
+    if (!document.getElementById('track-type')) return;
     document.getElementById('track-type').innerText = localStorage.getItem((window.SHOP_SLUG || 'default') + '_last_order_type') || 'Dine-in';
     document.getElementById('track-total').innerText = formatRp(Number(localStorage.getItem((window.SHOP_SLUG || 'default') + '_last_order_total') || '0'));
     setTimeout(() => { const modal = document.getElementById('modal-rating'); if(modal) modal.classList.remove('hidden'); }, 3000);

@@ -174,6 +174,28 @@
                 </a>
             </div>
 
+            @can('manage-payments')
+                <section x-show="staticQrisOrders.length || staticQrisError" x-cloak class="mb-4 rounded-[12px] border border-amber-200 bg-amber-50 p-3">
+                    <h3 class="text-sm font-bold text-[#111827]">Pesanan menunggu verifikasi QRIS</h3>
+                    <p class="mt-1 text-xs text-[#53565a]">Periksa aplikasi merchant, lalu masukkan nominal dana masuk dan referensi transaksi.</p>
+                    <p x-show="staticQrisError" x-text="staticQrisError" class="mt-2 text-sm text-red-700" role="alert"></p>
+                    <template x-for="order in staticQrisOrders" :key="order.id">
+                        <form @submit.prevent="verifyStaticQris(order, new FormData($event.target))" class="mt-3 flex flex-wrap items-center gap-2 border-t border-amber-200 pt-3">
+                            <p class="grow text-sm font-semibold text-[#111827]" x-text="'#' + order.id + ' · ' + order.customer_name + ' · ' + Number(order.grand_total).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })"></p>
+                            <label class="sr-only" :for="'qris-amount-' + order.id">Nominal dana masuk dalam rupiah</label>
+                            <input :id="'qris-amount-' + order.id" name="received_amount" type="number" min="0" max="9999999999.99" step="0.01" inputmode="decimal" required placeholder="Dana masuk (Rp)"
+                                   class="min-h-11 w-36 rounded-[10px] border border-amber-200 bg-white px-3 text-sm">
+                            <label class="sr-only" :for="'qris-reference-' + order.id">Referensi transaksi QRIS</label>
+                            <input :id="'qris-reference-' + order.id" name="reference" required maxlength="100" placeholder="Referensi transaksi"
+                                   class="min-h-11 rounded-[10px] border border-amber-200 bg-white px-3 text-sm">
+                            <button type="submit" :disabled="staticQrisVerifying !== null" class="min-h-11 rounded-[10px] bg-[#df5826] px-3 text-xs font-semibold text-white disabled:opacity-50">
+                                <span x-text="staticQrisVerifying === order.id ? 'Memverifikasi…' : 'Konfirmasi dana masuk'"></span>
+                            </button>
+                        </form>
+                    </template>
+                </section>
+            @endcan
+
             <div>
                 {{-- Empty State when no active orders --}}
                 <div x-show="activeOrders.length === 0" x-cloak class="bg-[#f8f9fa] border border-dashed border-[#e6e5e0] rounded-[12px] py-3 px-4 flex items-center justify-center text-center">
@@ -1047,10 +1069,12 @@
             {{-- QRIS --}}
             <template x-if="paymentModal.method === 'QRIS'">
             <div class="text-center py-2 bg-[#f8f9fa] rounded-[12px] border border-[#d8dce2] p-3">
-                <div class="w-24 h-24 bg-white rounded-[12px] border border-[#e6e5e0] mx-auto flex items-center justify-center">
-                    <i class="fas fa-qrcode text-4xl text-[#111827]"></i>
-                </div>
-                <p class="text-[11px] text-[#53565a] mt-2">Minta pelanggan scan QRIS lalu klik Konfirmasi Pembayaran</p>
+                @if($staticQrisUrl)
+                    <img src="{{ $staticQrisUrl }}" alt="Kode QRIS outlet" class="w-full max-w-52 bg-white object-contain mx-auto">
+                @else
+                    <p class="text-xs text-[#53565a]">Gunakan QRIS fisik di meja kasir.</p>
+                @endif
+                <p class="text-xs text-[#53565a] mt-2">Cocokkan nominal dana masuk di aplikasi merchant sebelum konfirmasi.</p>
             </div>
             </template>
 
@@ -1538,6 +1562,9 @@ function posApp(customerScreen = null) {
         activeOrders: {{ Illuminate\Support\Js::from($activeQueueOrders ?? []) }} || [],
         recalledOrderId: null,
         paymentPending: false,
+        staticQrisOrders: [],
+        staticQrisError: '',
+        staticQrisVerifying: null,
         checkoutRequestId: null,
         toast: { show: false, message: '', type: 'success', timeout: null },
 
@@ -1607,6 +1634,10 @@ function posApp(customerScreen = null) {
             this.initCustomerDisplaySync();
             this.fetchIncoming();
             setInterval(() => this.fetchIncoming(), 5000);
+            @can('manage-payments')
+                this.fetchStaticQrisOrders();
+                setInterval(() => this.fetchStaticQrisOrders(), 10000);
+            @endcan
 
             // Auto-recall order from URL query (?recall=12&pay=1)
             const urlParams = new URLSearchParams(window.location.search);
@@ -1619,6 +1650,30 @@ function posApp(customerScreen = null) {
                         setTimeout(() => this.openPayment(), 500);
                     }
                 });
+            }
+        },
+
+        async fetchStaticQrisOrders() {
+            try {
+                const response = await window.oqariFetch('/admin/pos/static-qris', { headers: { Accept: 'application/json' } });
+                if (response.ok) this.staticQrisOrders = await response.json();
+            } catch {
+                // The next refresh will retry.
+            }
+        },
+
+        async verifyStaticQris(order, payment) {
+            if (this.staticQrisVerifying !== null) return;
+            this.staticQrisVerifying = order.id;
+            this.staticQrisError = '';
+            try {
+                await this.post(`/admin/pos/static-qris/${order.id}/confirm`, Object.fromEntries(payment));
+                this.staticQrisOrders = this.staticQrisOrders.filter(candidate => candidate.id !== order.id);
+                this.fetchIncoming();
+            } catch (error) {
+                this.staticQrisError = error.message;
+            } finally {
+                this.staticQrisVerifying = null;
             }
         },
 

@@ -151,6 +151,32 @@
                             <i class="fas fa-users text-[#a83c17]" aria-hidden="true"></i>
                             {{ $branch->memberships_count }} penugasan staf
                         </p>
+                        <details class="rounded-[10px] border border-[#e9ebf0] p-3" @if($errors->getBag('qris'.$branch->id)->any()) open @endif>
+                            <summary class="cursor-pointer text-sm font-semibold">
+                                QRIS statis · {{ $staticQrisUrls[$branch->id] ? 'Aktif' : 'Belum diatur' }}
+                            </summary>
+                            @if($staticQrisUrls[$branch->id])
+                                <img src="{{ $staticQrisUrls[$branch->id] }}" alt="QRIS {{ $branch->name }}" class="my-3 mx-auto h-36 w-36 object-contain bg-white" loading="lazy">
+                            @endif
+                            <form action="{{ route('admin.branches.qris.update', $branch) }}" method="POST" enctype="multipart/form-data" class="mt-3 space-y-2">
+                                @csrf
+                                @method('PUT')
+                                <label for="static-qris-{{ $branch->id }}" class="block text-xs font-semibold">Gambar QRIS dari penyedia pembayaran outlet</label>
+                                <input type="file" id="static-qris-{{ $branch->id }}" name="static_qris" accept="image/png,image/jpeg" required class="block w-full text-xs">
+                                <p class="text-xs text-[#53565a]">PNG atau JPG, maksimal 3 MB.</p>
+                                @foreach($errors->getBag('qris'.$branch->id)->get('static_qris') as $error)
+                                    <p class="text-xs text-red-700" role="alert">{{ $error }}</p>
+                                @endforeach
+                                <button type="submit" class="min-h-11 rounded-[10px] bg-[#df5826] px-3 text-xs font-semibold text-white">{{ $staticQrisUrls[$branch->id] ? 'Ganti gambar' : 'Simpan QRIS' }}</button>
+                            </form>
+                            @if($staticQrisUrls[$branch->id])
+                                <form action="{{ route('admin.branches.qris.destroy', $branch) }}" method="POST" class="mt-2">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="min-h-11 rounded-[10px] border border-[#e9ebf0] px-3 text-xs font-semibold text-red-700">Nonaktifkan QRIS</button>
+                                </form>
+                            @endif
+                        </details>
                     @endif
                 </div>
 

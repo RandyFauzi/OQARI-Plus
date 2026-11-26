@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Models\Table;
@@ -18,8 +17,6 @@ class OrderCreationTest extends TestCase
 
     protected $tableModel;
 
-    protected $paymentMethod;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -27,13 +24,6 @@ class OrderCreationTest extends TestCase
         $this->shop = Shop::factory()->create();
         $this->tableModel = Table::create(['shop_id' => $this->shop->id, 'name' => 'Meja 1']);
 
-        $this->paymentMethod = PaymentMethod::create([
-            'shop_id' => $this->shop->id,
-            'name' => 'QRIS',
-            'code' => 'QRIS',
-            'type' => 'QRIS',
-            'is_active' => true,
-        ]);
     }
 
     public function test_can_create_order_successfully()
@@ -47,7 +37,7 @@ class OrderCreationTest extends TestCase
         $payload = [
             'table_id' => 'Meja 1',
             'customer_name' => 'Randy',
-            'payment_method' => 'QRIS',
+            'payment_method' => 'CASH',
             'items' => [
                 [
                     'id' => $product->id,
@@ -80,7 +70,7 @@ class OrderCreationTest extends TestCase
         $payload = [
             'table_id' => 'Meja 1',
             'customer_name' => 'Randy',
-            'payment_method' => 'QRIS',
+            'payment_method' => 'CASH',
             'items' => [
                 [
                     'id' => 9999, // Invalid
@@ -105,7 +95,7 @@ class OrderCreationTest extends TestCase
         $payload = [
             'table_id' => 'Meja 1',
             'customer_name' => 'Randy',
-            'payment_method' => 'QRIS',
+            'payment_method' => 'CASH',
             'items' => [['id' => $product->id, 'qty' => 1]],
         ];
 
@@ -122,7 +112,7 @@ class OrderCreationTest extends TestCase
         $payload = [
             'table_id' => 'Meja 1',
             'customer_name' => 'Randy',
-            'payment_method' => 'QRIS',
+            'payment_method' => 'CASH',
             'items' => [['id' => $product->id, 'qty' => -5]],
         ];
 
@@ -145,7 +135,7 @@ class OrderCreationTest extends TestCase
             'table_id' => null,
             'customer_name' => 'Budi Takeaway',
             'customer_email' => 'budi@example.com',
-            'payment_method' => 'QRIS',
+            'payment_method' => 'CASH',
             'items' => [
                 ['id' => $product->id, 'qty' => 1],
             ],
@@ -178,7 +168,7 @@ class OrderCreationTest extends TestCase
             'table_id' => '',
             'customer_name' => 'Dina DineIn',
             'customer_email' => 'dina@example.com',
-            'payment_method' => 'QRIS',
+            'payment_method' => 'CASH',
             'items' => [
                 ['id' => $product->id, 'qty' => 1],
             ],
@@ -203,7 +193,7 @@ class OrderCreationTest extends TestCase
             'customer_name' => 'Customer Without Email',
             'customer_email' => '',
             'customer_phone' => '08123456789',
-            'payment_method' => 'QRIS',
+            'payment_method' => 'CASH',
             'items' => [
                 ['id' => $product->id, 'qty' => 1],
             ],
@@ -270,7 +260,7 @@ class OrderCreationTest extends TestCase
             'customer_email' => null,
             'customer_phone' => '08123456789',
             'voucher_code' => 'HEMAT10K',
-            'payment_method' => 'QRIS',
+            'payment_method' => 'CASH',
             'items' => [
                 ['id' => $product->id, 'qty' => 1],
             ],

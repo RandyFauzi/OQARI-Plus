@@ -5,7 +5,9 @@ namespace App\Services;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Exceptions\DecoderException;
 use Intervention\Image\ImageManager;
 
 class MediaService
@@ -89,6 +91,24 @@ class MediaService
         $maxSize = $prefix === 'logo' ? 800 : 1200;
 
         return $this->processAndStore($file, $directory, $filename, $maxSize, $maxSize);
+    }
+
+    public function storeStaticQris(UploadedFile $file, int $shopId, int $branchId): string
+    {
+        $path = "media/shops/{$shopId}/branches/{$branchId}/qris/".Str::uuid().'.png';
+        try {
+            $image = $this->imageManager->read($file->getRealPath())->toPng();
+        } catch (DecoderException) {
+            throw ValidationException::withMessages(['static_qris' => 'Gambar QRIS tidak dapat dibaca.'])->errorBag('qris'.$branchId);
+        }
+        abort_unless(Storage::disk($this->disk)->put($path, $image->toString()), 503, 'Gambar QRIS gagal disimpan.');
+
+        return $path;
+    }
+
+    public function delete(string $path): void
+    {
+        Storage::disk($this->disk)->delete($path);
     }
 
     /**

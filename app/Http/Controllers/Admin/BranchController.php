@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Branch\ManageBranches;
+use App\Actions\Branch\ManageStaticQris;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\User;
 use App\Services\BranchContext;
+use App\Services\MediaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -14,7 +16,7 @@ use Illuminate\View\View;
 
 class BranchController extends Controller
 {
-    public function index(Request $request, BranchContext $context): View
+    public function index(Request $request, BranchContext $context, MediaService $media): View
     {
         $user = $request->user();
         abort_unless($user->shop_id, 404);
@@ -22,7 +24,32 @@ class BranchController extends Controller
 
         $branches = $context->accessible($user)->withCount('memberships')->orderByDesc('is_primary')->orderBy('name')->get();
 
-        return view('Admin.Branches.index', compact('branches'));
+        $staticQrisUrls = $branches->mapWithKeys(fn (Branch $branch): array => [$branch->id => $media->url($branch->static_qris_path)]);
+
+        return view('Admin.Branches.index', compact('branches', 'staticQrisUrls'));
+    }
+
+    public function updateStaticQris(Request $request, int $branch, ManageStaticQris $action): RedirectResponse
+    {
+        $outlet = $this->activeOwnedBranch($request, $branch);
+        $data = $request->validateWithBag('qris'.$branch, [
+            'static_qris' => ['required', 'image', 'mimes:png,jpg,jpeg', 'max:3072', 'dimensions:min_width=200,min_height=200,max_width=2400,max_height=2400'],
+        ], ['static_qris.dimensions' => 'Gunakan gambar QRIS berukuran 200 sampai 2400 piksel pada tiap sisi.']);
+        $action->execute($outlet, $data['static_qris']);
+
+        return back()->with('success', 'QRIS statis outlet disimpan.');
+    }
+
+    public function removeStaticQris(Request $request, int $branch, ManageStaticQris $action): RedirectResponse
+    {
+        $action->execute($this->activeOwnedBranch($request, $branch), null);
+
+        return back()->with('success', 'QRIS statis outlet dinonaktifkan.');
+    }
+
+    private function activeOwnedBranch(Request $request, int $branch): Branch
+    {
+        return Branch::where('shop_id', $this->owner($request)->shop_id)->where('is_active', true)->findOrFail($branch);
     }
 
     public function store(Request $request, ManageBranches $branches): RedirectResponse

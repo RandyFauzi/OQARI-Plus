@@ -4,7 +4,7 @@ return [
     'groups' => [
         'branches' => [
             'shops' => ['branches_enabled'],
-            'branches' => ['id', 'shop_id', 'slug', 'name', 'address', 'is_primary', 'is_active'],
+            'branches' => ['id', 'shop_id', 'slug', 'name', 'address', 'is_primary', 'is_active', 'static_qris_path'],
             'branch_memberships' => ['id', 'branch_id', 'user_id', 'role'],
             'orders' => ['branch_id'],
             'tables' => ['branch_id'],
@@ -51,7 +51,7 @@ return [
             'cash_drawer_transactions' => ['payment_id'],
         ],
         'checkout' => [
-            'orders' => ['checkout_request_id', 'amount_paid', 'change_amount', 'payment_reference', 'paid_at'],
+            'orders' => ['checkout_request_id', 'amount_paid', 'change_amount', 'payment_reference', 'payment_channel', 'payment_qr_path', 'paid_at'],
             'order_items' => ['variant_id'],
             'payments' => ['id', 'shop_id', 'order_id', 'payment_method', 'amount', 'reference_number', 'cancelled_at', 'created_at', 'updated_at'],
         ],

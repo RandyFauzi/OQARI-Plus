@@ -59,6 +59,7 @@ class KitchenController extends Controller
 
         DB::transaction(function () use ($shopId, $order, $validated): void {
             $locked = Order::where('shop_id', $shopId)->whereKey($order->id)->lockForUpdate()->firstOrFail();
+            abort_if($locked->isAwaitingStaticQrisPayment(), 422, 'Konfirmasi pembayaran QRIS sebelum memproses pesanan.');
             abort_if($locked->order_status === 'CANCELLED', 422, 'Pesanan yang dibatalkan tidak bisa dikirim kembali.');
             app(InventoryService::class)->deductStockForOrder($locked);
             $locked->update(['order_status' => $validated['status']]);

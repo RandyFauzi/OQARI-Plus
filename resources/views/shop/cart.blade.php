@@ -56,9 +56,13 @@
 
     <!-- CHECKOUT FOOTER -->
     <div class="fixed bottom-0 max-w-[420px] w-full bg-white border-t border-gray-100 p-4 shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)] z-40 mx-auto left-0 right-0">
-        <button id="btn-trigger-pay" onclick="openCustomerInfoModal()" class="w-full bg-primary text-white py-3.5 rounded-xl font-bold text-base shadow-lg hover:shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all">
+        <button id="btn-trigger-pay" type="button" onclick="openCustomerInfoModal()" @disabled(! $staticQrisAvailable) @unless($staticQrisAvailable) data-qris-unavailable aria-describedby="qris-unavailable" @endunless
+                class="w-full bg-primary text-white py-3.5 rounded-xl font-bold text-base shadow-lg hover:shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all disabled:cursor-not-allowed disabled:opacity-50">
             <span id="btn-pay-text">Lanjut Pembayaran</span> <i class="fas fa-chevron-right text-xs opacity-80"></i>
         </button>
+        @unless($staticQrisAvailable)
+            <p id="qris-unavailable" class="mt-2 text-sm text-gray-700">QRIS belum tersedia di outlet ini. Silakan pesan dan bayar di kasir.</p>
+        @endunless
     </div>
 
     <!-- CUSTOMER INFO MODAL (Bottom Sheet -> Center Modal) -->
@@ -127,9 +131,11 @@
                 </div>
             </div>
 
-            <button onclick="triggerPaymentGateway()" class="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg mt-8 shadow-lg hover:shadow-xl active:scale-95 transition-all flex justify-center items-center gap-2">
-                Lanjut ke Pembayaran <i class="fas fa-chevron-right text-xs opacity-80"></i>
-            </button>
+            @if($staticQrisAvailable)
+                <button type="button" onclick="reviewCheckout()" class="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg mt-8 shadow-lg hover:shadow-xl active:scale-95 transition-all flex justify-center items-center gap-2">
+                    Lanjut ke Pembayaran <i class="fas fa-chevron-right text-xs opacity-80" aria-hidden="true"></i>
+                </button>
+            @endif
         </div>
     </div>
 
@@ -141,20 +147,16 @@
             
             <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h3 class="font-bold text-xl text-gray-800">Payment Method</h3>
+                    <h3 class="font-bold text-xl text-gray-800">Pembayaran QRIS</h3>
                     <p class="text-xs text-gray-500 mt-1 uppercase tracking-wider font-bold">{{ $shop->name }}</p>
                 </div>
                 <div class="bg-primary/10 text-primary px-3 py-1.5 rounded-lg text-sm font-bold border border-primary/20" id="pg-total">Rp 0</div>
             </div>
             
-            <label class="flex items-center gap-4 p-4 border-2 border-primary bg-primary/5 rounded-2xl mb-8 cursor-pointer">
-                <input type="radio" name="payment" value="QRIS" checked class="accent-primary w-5 h-5">
-                <div class="bg-primary p-1 rounded-md"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" class="h-5 filter invert" alt="QRIS"></div>
-                <span class="font-bold text-sm text-primary">QRIS (GoPay, Dana, dll)</span>
-            </label>
+            <p class="mb-6 text-sm text-gray-700">Buat pesanan untuk melihat kode QRIS outlet dan nominal akhir. Kasir akan memverifikasi pembayaran Anda.</p>
             
-            <button id="btn-pay" onclick="processSimulatedPayment()" class="w-full bg-primary text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl active:scale-95 transition-all flex justify-center items-center gap-2">
-                Order Now
+            <button type="button" id="btn-pay" onclick="submitQrisOrder()" class="w-full bg-primary text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl active:scale-95 transition-all flex justify-center items-center gap-2">
+                Buat pesanan
             </button>
         </div>
     </div>

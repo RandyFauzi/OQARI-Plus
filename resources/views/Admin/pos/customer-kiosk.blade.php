@@ -462,8 +462,11 @@
                     </h2>
                     <p class="text-[13px] text-[#71717a] mt-1">Total yang harus dibayar:</p>
                     <p class="text-[32px] sm:text-[34px] font-bold text-[#df5826] my-3" x-text="'Rp' + formatRp(state.grand_total)"></p>
+                    @if($staticQrisUrl)
+                        <img x-show="state.payment_method === 'QRIS'" src="{{ $staticQrisUrl }}" alt="Kode QRIS outlet" class="w-full max-w-52 bg-white object-contain mx-auto mb-3">
+                    @endif
                     <p class="text-[12px] text-[#53565a]">
-                        <span x-show="state.payment_method === 'QRIS'">Silakan scan QRIS di meja kasir</span>
+                        <span x-show="state.payment_method === 'QRIS'">{{ $staticQrisUrl ? 'Pindai kode dan masukkan nominal sesuai total.' : 'Silakan pindai kode QRIS di meja kasir.' }}</span>
                         <span x-show="state.payment_method !== 'QRIS'">Menunggu konfirmasi kasir...</span>
                     </p>
                 </div>

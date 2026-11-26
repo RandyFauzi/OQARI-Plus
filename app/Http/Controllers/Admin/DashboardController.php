@@ -93,6 +93,7 @@ class DashboardController extends Controller
         if (array_key_exists($newStatus, $statusMap)) {
             $newStatus = $statusMap[$newStatus];
         }
+        abort_if($order->isAwaitingStaticQrisPayment() && $newStatus !== 'CANCELLED', 422, 'Konfirmasi pembayaran QRIS sebelum memproses pesanan.');
 
         $inventory = app(InventoryService::class);
         if ($newStatus === 'CANCELLED') {
@@ -149,6 +150,7 @@ class DashboardController extends Controller
     private function setBatchStatus(Request $request, int $orderId): JsonResponse
     {
         $order = Order::where('shop_id', Auth::user()->shop_id)->whereKey($orderId)->lockForUpdate()->firstOrFail();
+        abort_if($order->isAwaitingStaticQrisPayment(), 422, 'Konfirmasi pembayaran QRIS sebelum memproses pesanan.');
 
         $validated = $request->validate([
             'batch_no' => ['required', 'integer', 'min:1'],

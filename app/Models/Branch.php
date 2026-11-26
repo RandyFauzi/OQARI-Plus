@@ -13,6 +13,8 @@ class Branch extends Model
 
     protected $fillable = ['shop_id', 'name', 'slug', 'address', 'is_primary', 'is_active', 'settings'];
 
+    protected $hidden = ['static_qris_path'];
+
     protected function casts(): array
     {
         return [

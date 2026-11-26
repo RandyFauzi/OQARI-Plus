@@ -30,6 +30,20 @@
         </div>
     </div>
 
+    @if($trackedOrder)
+        <h1 class="text-2xl font-extrabold text-gray-800 mb-2">
+            {{ $staticQrisUrl ? 'Menunggu pembayaran QRIS' : ($trackedOrder->order_status === 'CANCELLED' ? 'Pesanan dibatalkan' : 'Pembayaran dikonfirmasi') }}
+        </h1>
+        <p class="mb-4 text-sm text-gray-700">Pesanan #{{ $trackedOrder->id }} · Rp {{ number_format((float) $trackedOrder->grand_total, fmod((float) $trackedOrder->grand_total, 1) ? 2 : 0, ',', '.') }}</p>
+        @if($staticQrisUrl)
+            <img src="{{ $staticQrisUrl }}" alt="Kode QRIS {{ $activeBranch->name }}" class="mb-4 w-full max-w-64 bg-white object-contain">
+            <a href="{{ $staticQrisUrl }}" class="mb-4 text-sm font-semibold text-primary underline" target="_blank" rel="noopener noreferrer">Buka gambar QRIS</a>
+            <p class="mb-5 text-sm text-gray-700">Pindai atau simpan gambar QRIS, masukkan nominal sesuai pesanan, lalu tunjukkan nomor pesanan kepada kasir agar pembayaran dapat dicocokkan.</p>
+            <button type="button" onclick="window.location.reload()" class="mb-3 min-h-11 w-full rounded-xl border border-gray-300 font-semibold text-gray-800">Cek status pembayaran</button>
+        @elseif($trackedOrder->payment_status === 'PAID' && $trackedOrder->order_status !== 'CANCELLED')
+            <p class="mb-4 text-sm text-gray-700">Pembayaran diterima. Tim {{ $activeBranch->name }} dapat memproses pesanan Anda.</p>
+        @endif
+    @else
     <!-- Teks Status -->
     <h1 class="text-2xl font-extrabold text-gray-800 mb-2">Orderan Sedang Diproses!</h1>
     <p class="text-gray-500 mb-8 text-sm">Pesanan <b id="track-type" class="text-primary">Dine-in</b> senilai <b id="track-total">Rp 0</b> telah diterima. Barista dan tim dapur {{ $shop->name }} langsung menyiapkan pesanan Anda.</p>
@@ -44,12 +58,14 @@
             <p class="font-bold text-gray-800 text-lg">#ORD-<span id="display-order-number">Menunggu...</span></p>
         </div>
     </div>
+    @endif
 
     <!-- Tombol Kembali -->
     <a href="#" onclick="goBackHome(event)" class="w-full bg-primary text-white py-4 rounded-xl font-bold text-center shadow-lg hover:shadow-xl hover:bg-secondary transition-colors active:scale-95 block">
         Kembali ke Menu
     </a>
 
+    @unless($trackedOrder)
     <!-- RATING MODAL (Alpine.js) -->
     <div id="modal-rating" class="fixed inset-0 max-w-[420px] mx-auto z-50 hidden flex flex-col justify-end">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeRating()"></div>
@@ -106,8 +122,10 @@
         </div>
     </div>
 
+    @endunless
     @include('shop.scripts')
     
+    @unless($trackedOrder)
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Check if there is an order number generated
@@ -124,5 +142,6 @@
             }
         });
     </script>
+    @endunless
 </body>
 </html>

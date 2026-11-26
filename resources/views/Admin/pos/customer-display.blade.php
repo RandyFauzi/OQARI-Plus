@@ -175,11 +175,11 @@
                         <div class="bg-[#fff6f0] border border-[#f5d5c6] rounded-[16px] p-5 text-center">
                             <template x-if="state.payment_method === 'QRIS'">
                                 <div>
-                                    <div class="w-24 h-24 bg-white rounded-[14px] border border-[#f5d5c6] mx-auto flex items-center justify-center mb-3 shadow-2xs">
-                                        <i class="fas fa-qrcode text-5xl text-[#111827]"></i>
-                                    </div>
+                                    @if($staticQrisUrl)
+                                        <img src="{{ $staticQrisUrl }}" alt="Kode QRIS outlet" class="w-full max-w-64 bg-white object-contain mx-auto mb-3">
+                                    @endif
                                     <h3 class="text-[16px] font-bold text-[#111827]">Pembayaran QRIS</h3>
-                                    <p class="text-[12px] text-[#53565a] mt-1">Silakan scan kode QRIS pada perangkat pembayaran kasir</p>
+                                    <p class="text-[12px] text-[#53565a] mt-1">{{ $staticQrisUrl ? 'Pindai kode dan masukkan nominal sesuai total.' : 'Silakan pindai kode QRIS di meja kasir.' }}</p>
                                 </div>
                             </template>
                             <template x-if="state.payment_method !== 'QRIS'">

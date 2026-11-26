@@ -10,6 +10,8 @@ class Order extends Model
 {
     use BelongsToBranch, BelongsToShop;
 
+    public const StaticQrisChannel = 'qris_static';
+
     protected $fillable = [
         'shop_id',
         'checkout_request_id',
@@ -19,6 +21,8 @@ class Order extends Model
         'customer_email',
         'customer_phone',
         'payment_method',
+        'payment_channel',
+        'payment_qr_path',
         'subtotal',
         'discount_amount',
         'voucher_code',
@@ -40,11 +44,18 @@ class Order extends Model
         'cancelled_by',
         'cancellation_reason', ];
 
-    protected $hidden = ['qr_request_id'];
+    protected $hidden = ['qr_request_id', 'payment_qr_path'];
 
     protected $casts = [
         'paid_at' => 'datetime',
     ];
+
+    public function isAwaitingStaticQrisPayment(): bool
+    {
+        return $this->payment_channel === self::StaticQrisChannel
+            && $this->payment_status === 'UNPAID'
+            && $this->order_status !== 'CANCELLED';
+    }
 
     public function shop()
     {
