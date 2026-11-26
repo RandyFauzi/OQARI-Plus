@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\User;
 use App\Services\BranchContext;
 use App\Services\MediaService;
+use App\Services\SchemaCompatibility;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -16,7 +17,7 @@ use Illuminate\View\View;
 
 class BranchController extends Controller
 {
-    public function index(Request $request, BranchContext $context, MediaService $media): View
+    public function index(Request $request, BranchContext $context, MediaService $media, SchemaCompatibility $schema): View
     {
         $user = $request->user();
         abort_unless($user->shop_id, 404);
@@ -24,9 +25,12 @@ class BranchController extends Controller
 
         $branches = $context->accessible($user)->withCount('memberships')->orderByDesc('is_primary')->orderBy('name')->get();
 
-        $staticQrisUrls = $branches->mapWithKeys(fn (Branch $branch): array => [$branch->id => $media->url($branch->static_qris_path)]);
+        $staticQrisReady = $user->role === 'owner' && $schema->missing(['static_qris']) === [];
+        $staticQrisUrls = $staticQrisReady
+            ? $branches->mapWithKeys(fn (Branch $branch): array => [$branch->id => $media->url($branch->static_qris_path)])
+            : [];
 
-        return view('Admin.Branches.index', compact('branches', 'staticQrisUrls'));
+        return view('Admin.Branches.index', compact('branches', 'staticQrisUrls', 'staticQrisReady'));
     }
 
     public function updateStaticQris(Request $request, int $branch, ManageStaticQris $action): RedirectResponse

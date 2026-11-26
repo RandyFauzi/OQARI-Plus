@@ -4,7 +4,7 @@ return [
     'groups' => [
         'branches' => [
             'shops' => ['branches_enabled'],
-            'branches' => ['id', 'shop_id', 'slug', 'name', 'address', 'is_primary', 'is_active', 'static_qris_path'],
+            'branches' => ['id', 'shop_id', 'slug', 'name', 'address', 'is_primary', 'is_active'],
             'branch_memberships' => ['id', 'branch_id', 'user_id', 'role'],
             'orders' => ['branch_id'],
             'tables' => ['branch_id'],
@@ -51,7 +51,7 @@ return [
             'cash_drawer_transactions' => ['payment_id'],
         ],
         'checkout' => [
-            'orders' => ['checkout_request_id', 'amount_paid', 'change_amount', 'payment_reference', 'payment_channel', 'payment_qr_path', 'paid_at'],
+            'orders' => ['checkout_request_id', 'amount_paid', 'change_amount', 'payment_reference', 'paid_at'],
             'order_items' => ['variant_id'],
             'payments' => ['id', 'shop_id', 'order_id', 'payment_method', 'amount', 'reference_number', 'cancelled_at', 'created_at', 'updated_at'],
         ],
@@ -120,6 +120,10 @@ return [
             'shops' => ['status', 'trial_ends_at', 'last_active_at', 'mrr', 'suspended_at', 'suspended_reason', 'suspended_by'],
             'superadmin_audit_logs' => ['id', 'actor_id', 'action', 'target_type', 'target_id', 'target_label', 'meta', 'ip_address', 'created_at', 'updated_at'],
         ],
+        'static_qris' => [
+            'branches' => ['static_qris_path'],
+            'orders' => ['payment_channel', 'payment_qr_path'],
+        ],
         'receipts' => [
             'receipt_deliveries' => ['id', 'order_id', 'shop_id', 'channel', 'destination', 'status', 'attempts', 'provider_message_id', 'failure_reason', 'sent_at', 'failed_at', 'created_at', 'updated_at'],
         ],
@@ -130,6 +134,7 @@ return [
         'catalog' => ['catalog'], 'orders' => ['orders', 'catalog'],
         'pos' => ['catalog', 'orders', 'register'],
         'checkout' => ['catalog', 'orders', 'checkout', 'register', 'inventory', 'location_inventory', 'receipts'],
+        'static_qris' => ['static_qris'],
         'location_inventory' => ['location_inventory'],
         'inventory_controls' => ['inventory_controls', 'inventory', 'location_inventory', 'production', 'register'],
         'production' => ['production', 'inventory', 'location_inventory', 'audit'],

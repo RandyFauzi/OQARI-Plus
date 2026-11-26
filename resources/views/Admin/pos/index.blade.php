@@ -1635,8 +1635,10 @@ function posApp(customerScreen = null) {
             this.fetchIncoming();
             setInterval(() => this.fetchIncoming(), 5000);
             @can('manage-payments')
-                this.fetchStaticQrisOrders();
-                setInterval(() => this.fetchStaticQrisOrders(), 10000);
+                @if($staticQrisReady)
+                    this.fetchStaticQrisOrders();
+                    setInterval(() => this.fetchStaticQrisOrders(), 10000);
+                @endif
             @endcan
 
             // Auto-recall order from URL query (?recall=12&pay=1)

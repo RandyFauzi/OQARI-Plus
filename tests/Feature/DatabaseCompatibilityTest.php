@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Branch\ManageBranches;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\Shop;
 use App\Models\User;
 use App\Services\SchemaCompatibility;
@@ -62,6 +64,28 @@ class DatabaseCompatibilityTest extends TestCase
         $this->actingAs($cashier)->postJson(route('admin.pos.orders.submit'), [])->assertStatus(503);
         $this->assertDatabaseCount('orders', 0);
         $this->assertDatabaseCount('payments', 0);
+    }
+
+    public function test_pending_qris_migration_does_not_block_the_owner_dashboard_or_existing_pos(): void
+    {
+        $shop = Shop::factory()->create(['onboarding_status' => 'completed']);
+        $owner = User::factory()->create(['shop_id' => $shop->id, 'role' => 'owner']);
+        $branch = app(ManageBranches::class)->enable($shop);
+        $product = Product::factory()->create(['shop_id' => $shop->id, 'is_sold_out' => false]);
+        $migration = require database_path('migrations/2026_11_26_075941_add_static_qris_configuration_and_order_channel.php');
+        $migration->down();
+
+        $this->actingAs($owner)->get(route('admin.owner.dashboard'))->assertOk()->assertSee($branch->name);
+        $this->get(route('admin.branches.index'))->assertOk()->assertDontSee(route('admin.branches.qris.update', $branch));
+        $this->get(route('admin.pos.index'))->assertOk()->assertViewHas('staticQrisReady', false);
+        $this->getJson(route('admin.pos.orders.held'))->assertOk()->assertExactJson([]);
+        $this->getJson(route('admin.pos.qris.index'))->assertServiceUnavailable();
+
+        $checkout = route('shop.branch.order.submit', ['slug' => $shop->slug, 'branchSlug' => $branch->slug]);
+        $order = ['customer_name' => 'Rina', 'fulfillment_type' => 'TAKEAWAY', 'items' => [['id' => $product->id, 'qty' => 1]]];
+        $this->postJson($checkout, [...$order, 'payment_method' => 'QRIS'])->assertServiceUnavailable();
+        $this->postJson($checkout, [...$order, 'payment_method' => 'CASH'])->assertOk();
+        $this->assertDatabaseCount('orders', 1);
     }
 
     public function test_legacy_users_can_register_and_read_summary_without_access_columns(): void

@@ -175,8 +175,10 @@ class CreateOrderAction
                 'customer_email' => $data['customer_email'] ?? null,
                 'customer_phone' => $data['customer_phone'] ?? null,
                 'payment_method' => $data['payment_method'],
-                'payment_channel' => $usesStaticQris ? Order::StaticQrisChannel : null,
-                'payment_qr_path' => $awaitsPayment ? $qrisPath : null,
+                ...($usesStaticQris ? [
+                    'payment_channel' => Order::StaticQrisChannel,
+                    'payment_qr_path' => $awaitsPayment ? $qrisPath : null,
+                ] : []),
                 'subtotal' => $total,
                 'discount_amount' => $discountAmount,
                 'voucher_code' => $voucher?->code,

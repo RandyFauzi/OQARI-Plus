@@ -151,6 +151,8 @@
                             <i class="fas fa-users text-[#a83c17]" aria-hidden="true"></i>
                             {{ $branch->memberships_count }} penugasan staf
                         </p>
+                    @endif
+                    @if($staticQrisReady)
                         <details class="rounded-[10px] border border-[#e9ebf0] p-3" @if($errors->getBag('qris'.$branch->id)->any()) open @endif>
                             <summary class="cursor-pointer text-sm font-semibold">
                                 QRIS statis · {{ $staticQrisUrls[$branch->id] ? 'Aktif' : 'Belum diatur' }}

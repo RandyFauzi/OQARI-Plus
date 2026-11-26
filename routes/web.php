@@ -60,8 +60,8 @@ Route::middleware('auth')->controller(McpConnectionController::class)->group(fun
 Route::middleware(['auth', 'schema:branches'])->prefix('admin/branches')->name('admin.branches.')->group(function () {
     Route::get('/', [BranchController::class, 'index'])->name('index');
     Route::post('/', [BranchController::class, 'store'])->name('store');
-    Route::put('/{branch}/qris', [BranchController::class, 'updateStaticQris'])->whereNumber('branch')->name('qris.update');
-    Route::delete('/{branch}/qris', [BranchController::class, 'removeStaticQris'])->whereNumber('branch')->name('qris.destroy');
+    Route::put('/{branch}/qris', [BranchController::class, 'updateStaticQris'])->whereNumber('branch')->middleware('schema:static_qris')->name('qris.update');
+    Route::delete('/{branch}/qris', [BranchController::class, 'removeStaticQris'])->whereNumber('branch')->middleware('schema:static_qris')->name('qris.destroy');
     Route::get('/{branch}/staff', [BranchController::class, 'staff'])->name('staff');
     Route::post('/{branch}/staff', [BranchController::class, 'assign'])->name('assign');
     Route::delete('/{branch}/staff/{user}', [BranchController::class, 'unassign'])->name('unassign');
@@ -113,8 +113,8 @@ $operatingRoutes = function (): void {
         Route::get('/admin/pos/customer-kiosk', [PosController::class, 'customerKiosk'])->name('admin.pos.customer-kiosk');
         Route::post('/admin/pos/customer-kiosk/action', [PosController::class, 'customerKioskAction'])->name('admin.pos.customer-kiosk.action');
         Route::post('/admin/pos/orders', [PosController::class, 'submitOrder'])->middleware(['can:manage-payments', 'schema:checkout'])->name('admin.pos.orders.submit');
-        Route::get('/admin/pos/static-qris', [PosController::class, 'staticQrisOrders'])->middleware(['can:manage-payments', 'schema:checkout'])->name('admin.pos.qris.index');
-        Route::post('/admin/pos/static-qris/{order}/confirm', [PosController::class, 'confirmStaticQris'])->whereNumber('order')->middleware(['can:manage-payments', 'schema:checkout'])->name('admin.pos.qris.confirm');
+        Route::get('/admin/pos/static-qris', [PosController::class, 'staticQrisOrders'])->middleware(['can:manage-payments', 'schema:checkout,static_qris'])->name('admin.pos.qris.index');
+        Route::post('/admin/pos/static-qris/{order}/confirm', [PosController::class, 'confirmStaticQris'])->whereNumber('order')->middleware(['can:manage-payments', 'schema:checkout,static_qris'])->name('admin.pos.qris.confirm');
         Route::post('/admin/pos/orders/hold', [PosController::class, 'holdOrder'])->middleware('schema:checkout')->name('admin.pos.orders.hold');
         Route::get('/admin/pos/orders/held', [PosController::class, 'heldOrders'])->name('admin.pos.orders.held');
         Route::post('/admin/pos/orders/{order}/recall', [PosController::class, 'recallOrder'])->name('admin.pos.orders.recall');

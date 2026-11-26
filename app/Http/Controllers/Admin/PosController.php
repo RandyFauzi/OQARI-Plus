@@ -23,6 +23,7 @@ use App\Services\BranchContext;
 use App\Services\BranchMenuResolver;
 use App\Services\InventoryService;
 use App\Services\MediaService;
+use App\Services\SchemaCompatibility;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -37,11 +38,12 @@ class PosController extends Controller
     //  VIEW
     // ──────────────────────────────────────────────
 
-    public function index(BranchContext $branches, MediaService $media)
+    public function index(BranchContext $branches, MediaService $media, SchemaCompatibility $schema)
     {
         $user = Auth::user();
         $shop = $user->shop;
         $staticQrisUrl = $media->url($branches->branch()?->static_qris_path);
+        $staticQrisReady = $branches->branch() !== null && $schema->missing(['static_qris']) === [];
 
         $activeSession = CashRegisterSession::where('user_id', $user->id)
             ->whereHas('register', fn ($query) => $query->where('shop_id', $shop->id))
@@ -78,7 +80,7 @@ class PosController extends Controller
         // Active held orders — show in recall bar
         $heldOrders = Order::where('shop_id', $shop->id)
             ->where('order_status', 'HOLD')
-            ->whereNull('payment_channel')
+            ->when(in_array('payment_channel', $schema->columns('orders'), true), fn ($query) => $query->whereNull('payment_channel'))
             ->with(['items', 'table'])
             ->latest()
             ->take(10)
@@ -146,7 +148,7 @@ class PosController extends Controller
         ];
 
         return view('Admin.pos.index', compact(
-            'products', 'categories', 'activeSession', 'heldOrders', 'heldOrderSummaries', 'activeQueueOrders', 'registers', 'shop', 'tables', 'customerScreen', 'staticQrisUrl'
+            'products', 'categories', 'activeSession', 'heldOrders', 'heldOrderSummaries', 'activeQueueOrders', 'registers', 'shop', 'tables', 'customerScreen', 'staticQrisUrl', 'staticQrisReady'
         ));
     }
 
@@ -586,13 +588,13 @@ class PosController extends Controller
     //  API — Get all HOLD orders for this shop
     // ──────────────────────────────────────────────
 
-    public function heldOrders()
+    public function heldOrders(SchemaCompatibility $schema)
     {
         $shopId = Auth::user()->shop_id;
 
         $orders = Order::where('shop_id', $shopId)
             ->where('order_status', 'HOLD')
-            ->whereNull('payment_channel')
+            ->when(in_array('payment_channel', $schema->columns('orders'), true), fn ($query) => $query->whereNull('payment_channel'))
             ->with(['items', 'table'])
             ->latest()
             ->take(20)

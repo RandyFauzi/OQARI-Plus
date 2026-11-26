@@ -17,6 +17,7 @@ use App\Services\BranchContext;
 use App\Services\BranchMenuResolver;
 use App\Services\BranchStorefrontResolver;
 use App\Services\MediaService;
+use App\Services\SchemaCompatibility;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -168,7 +169,8 @@ class ShopController extends Controller
             $shop = app(BranchStorefrontResolver::class)->apply($shop, $activeBranch);
         }
 
-        $staticQrisAvailable = filled($activeBranch?->static_qris_path);
+        $staticQrisAvailable = filled($activeBranch?->static_qris_path)
+            && app(SchemaCompatibility::class)->missing(['static_qris']) === [];
 
         return view('shop.cart', compact('shop', 'activeBranch', 'staticQrisAvailable'));
     }
@@ -190,6 +192,7 @@ class ShopController extends Controller
         $staticQrisUrl = null;
         if ($request->has('order')) {
             abort_unless($activeBranch && $request->hasValidSignature(), 403);
+            app(SchemaCompatibility::class)->requireFeatures(['static_qris']);
             $trackedOrder = Order::where('shop_id', $shop->id)->where('branch_id', $activeBranch->id)
                 ->where('payment_channel', Order::StaticQrisChannel)->findOrFail($request->query('order'));
             if ($trackedOrder->isAwaitingStaticQrisPayment()) {
@@ -264,6 +267,10 @@ class ShopController extends Controller
 
         if ($fulfillmentType === 'DINE_IN' && empty($validated['table_id'])) {
             return response()->json(['success' => false, 'message' => 'Nomor meja wajib diisi untuk pesanan Dine In.'], 422);
+        }
+
+        if ($validated['payment_method'] === 'QRIS') {
+            app(SchemaCompatibility::class)->requireFeatures(['static_qris']);
         }
 
         try {
