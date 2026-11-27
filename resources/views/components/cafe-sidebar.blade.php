@@ -56,6 +56,7 @@ if ($member?->role === 'superadmin') {
     $groups = ['Administrasi Platform' => [
         [null, 'Dashboard', 'fa-chart-pie', 'superadmin.dashboard', null],
         [null, 'Manajemen Toko', 'fa-store', 'superadmin.shops.index', null],
+        [null, 'Domain Kustom', 'fa-globe', 'superadmin.custom-domains.index', null],
         [null, 'Manajemen Pengguna', 'fa-users', 'superadmin.users.index', null],
     ]];
 }

@@ -28,58 +28,19 @@
         </div>
     </div>
 
-    <!-- Custom Domain Requests Notification -->
-    <div class="bg-white rounded-2xl shadow-sm border {{ $pendingDomains->where('status', \App\Models\ShopDomain::STATUS_PENDING_APPROVAL)->isNotEmpty() ? 'border-orange-300' : 'border-line' }} overflow-hidden">
-        <div class="p-4 border-b border-line bg-gray-50 flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5">
-                <h3 class="font-bold text-gray-800"><i class="fas fa-globe mr-1.5 text-orange-600"></i> Notifikasi Pengajuan Domain Kustom</h3>
-                @if($pendingDomains->isNotEmpty())
-                    <span class="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-bold text-orange-800">{{ $pendingDomains->count() }}</span>
-                @endif
+    @if($pendingApprovalCount > 0)
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-orange-200 bg-orange-50 px-5 py-3.5 text-sm">
+            <div class="flex items-center gap-2.5 text-orange-900">
+                <i class="fas fa-globe text-orange-600"></i>
+                <span>Ada <strong>{{ $pendingApprovalCount }}</strong> pengajuan domain kustom menunggu persetujuan.</span>
             </div>
-            <span class="text-xs text-gray-500">Tambahkan sebagai Parked Domain di Hostinger sebelum menyetujui.</span>
+            <a href="{{ route('superadmin.custom-domains.index', ['status' => 'pending_approval']) }}"
+               class="inline-flex items-center gap-1.5 rounded-lg bg-[#df5826] px-3.5 py-2 text-xs font-bold text-white hover:bg-[#c94d00] transition">
+                <span>Buka Halaman Domain Kustom</span>
+                <i class="fas fa-arrow-right text-[10px]"></i>
+            </a>
         </div>
-        <div class="divide-y divide-gray-100">
-            @forelse($pendingDomains as $reqDomain)
-                <div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="space-y-1">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="font-bold text-gray-900">{{ $reqDomain->domain }}</span>
-                            @if($reqDomain->isPendingApproval())
-                                <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800">DNS Terverifikasi · Siap Diaktifkan</span>
-                            @elseif($reqDomain->status === \App\Models\ShopDomain::STATUS_FAILED)
-                                <span class="rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-semibold text-red-700">DNS Gagal</span>
-                            @else
-                                <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800">Menunggu DNS Pemilik</span>
-                            @endif
-                        </div>
-                        <p class="text-xs text-gray-600">
-                            Toko: <strong>{{ $reqDomain->shop?->name ?? '-' }}</strong> · Diajukan {{ $reqDomain->created_at->diffForHumans() }}
-                        </p>
-                        @if($reqDomain->last_error)
-                            <p class="text-xs text-red-600">{{ $reqDomain->last_error }}</p>
-                        @endif
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <form method="POST" action="{{ route('superadmin.custom-domains.approve', $reqDomain->id) }}">
-                            @csrf
-                            <button type="submit" class="rounded-lg bg-emerald-600 hover:bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white transition cursor-pointer">
-                                Setujui &amp; Aktifkan
-                            </button>
-                        </form>
-                        <form method="POST" action="{{ route('superadmin.custom-domains.reject', $reqDomain->id) }}">
-                            @csrf
-                            <button type="submit" class="rounded-lg border border-red-200 bg-white hover:bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 transition cursor-pointer">
-                                Tolak
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            @empty
-                <div class="p-4 text-center text-gray-500 text-sm">Tidak ada pengajuan domain kustom yang menunggu persetujuan.</div>
-            @endforelse
-        </div>
-    </div>
+    @endif
 
     <!-- Activity Log -->
     <div class="bg-white rounded-2xl shadow-sm border border-line overflow-hidden">

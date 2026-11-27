@@ -111,11 +111,16 @@ class CustomDomainTest extends TestCase
         // Domain is still 404 before SuperAdmin approves
         $this->get('http://order.burgerkat.com/')->assertNotFound();
 
-        // SuperAdmin sees notification on dashboard and approves it
+        // SuperAdmin sees notification on dedicated Custom Domains page and approves it
         $this->actingAs($superadmin)
             ->get('http://localhost/superadmin/dashboard')
             ->assertOk()
-            ->assertSee('Notifikasi Pengajuan Domain Kustom')
+            ->assertSee('Buka Halaman Domain Kustom');
+
+        $this->actingAs($superadmin)
+            ->get('http://localhost/superadmin/custom-domains')
+            ->assertOk()
+            ->assertSee('Persetujuan Domain Kustom')
             ->assertSee('order.burgerkat.com');
 
         $this->actingAs($superadmin)
