@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Mail\CustomDomainRequestedMail;
+use App\Models\Branch;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Models\ShopDomain;
@@ -189,6 +190,14 @@ class CustomDomainTest extends TestCase
         $this->assertTrue($verified->isActive());
         $this->assertSame('cf-host-999', $verified->cloudflare_hostname_id);
         $this->assertSame('https://order.burgerkat.com/menu', $shop->storefrontBaseUrl());
+        $this->assertSame('https://order.burgerkat.com/menu/jakarta-selatan', $shop->storefrontBaseUrl('jakarta-selatan'));
+
+        $branch = Branch::create([
+            'shop_id' => $shop->id,
+            'name' => 'Jakarta Selatan',
+            'slug' => 'jakarta-selatan',
+            'is_active' => true,
+        ]);
 
         // Custom domain root / redirects guest to login, owner to dashboard, and /menu renders storefront
         $this->get('http://order.burgerkat.com/')
@@ -201,6 +210,13 @@ class CustomDomainTest extends TestCase
         $this->get('http://order.burgerkat.com/menu')
             ->assertOk()
             ->assertSee('Smash Burger Custom');
+
+        $this->get('http://order.burgerkat.com/menu/'.$branch->slug)
+            ->assertOk()
+            ->assertSee('Smash Burger Custom');
+
+        $this->get('http://order.burgerkat.com/menu/'.$branch->slug.'/cart')
+            ->assertOk();
 
         // Shop's own owner can access admin dashboard on custom domain
         $this->actingAs($owner)

@@ -134,6 +134,46 @@ class ShopController extends Controller
         return $this->submitOrder($request, $shop->slug);
     }
 
+    public function showBranchCustomDomain(Request $request, string $branchSlug)
+    {
+        $shop = $request->attributes->get('custom_domain_shop');
+        abort_unless($shop, 404);
+
+        return $this->show($request, $shop->slug, $branchSlug);
+    }
+
+    public function cartBranchCustomDomain(Request $request, string $branchSlug)
+    {
+        $shop = $request->attributes->get('custom_domain_shop');
+        abort_unless($shop, 404);
+
+        return $this->cart($request, $shop->slug, $branchSlug);
+    }
+
+    public function trackingBranchCustomDomain(Request $request, string $branchSlug)
+    {
+        $shop = $request->attributes->get('custom_domain_shop');
+        abort_unless($shop, 404);
+
+        return $this->tracking($request, $shop->slug, $branchSlug);
+    }
+
+    public function validateVoucherBranchCustomDomain(Request $request, string $branchSlug): JsonResponse
+    {
+        $shop = $request->attributes->get('custom_domain_shop');
+        abort_unless($shop, 404);
+
+        return $this->validateVoucherBranch($request, $shop->slug, $branchSlug);
+    }
+
+    public function submitOrderBranchCustomDomain(Request $request, string $branchSlug): JsonResponse
+    {
+        $shop = $request->attributes->get('custom_domain_shop');
+        abort_unless($shop, 404);
+
+        return $this->submitOrderBranch($request, $shop->slug, $branchSlug);
+    }
+
     public function showBranch(Request $request, string $slug, string $branchSlug)
     {
         return $this->show($request, $slug, $branchSlug);
@@ -340,7 +380,9 @@ class ShopController extends Controller
         }
 
         $trackingUrl = $order->payment_channel === Order::StaticQrisChannel
-            ? URL::signedRoute('shop.branch.tracking', ['slug' => $shop->slug, 'branchSlug' => $branch->slug, 'order' => $order->id])
+            ? ($request->attributes->has('custom_domain_shop')
+                ? URL::signedRoute('custom-domain.branch.tracking', ['branchSlug' => $branch->slug, 'order' => $order->id])
+                : URL::signedRoute('shop.branch.tracking', ['slug' => $shop->slug, 'branchSlug' => $branch->slug, 'order' => $order->id]))
             : null;
 
         return response()->json([

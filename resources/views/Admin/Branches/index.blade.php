@@ -152,6 +152,24 @@
                             {{ $branch->memberships_count }} penugasan staf
                         </p>
                     @endif
+                    @php
+                        $branchMenuUrl = auth()->user()?->shop?->storefrontBaseUrl($branch->slug);
+                    @endphp
+                    @if($branchMenuUrl)
+                        <div class="flex items-center justify-between gap-2 rounded-[10px] border border-[#f1f3f5] bg-[#f8f9fa] px-3 py-2 text-[11.5px]" x-data="{ copied: false }">
+                            <div class="min-w-0">
+                                <span class="block text-[10px] font-semibold text-[#7f837e]">Link Menu Outlet</span>
+                                <a href="{{ $branchMenuUrl }}" target="_blank" rel="noopener" class="block truncate font-mono font-semibold text-[#df5826] hover:underline">
+                                    {{ $branchMenuUrl }}
+                                </a>
+                            </div>
+                            <button type="button"
+                                    @click="navigator.clipboard?.writeText('{{ $branchMenuUrl }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                    class="shrink-0 rounded-lg border border-[#e9ebf0] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#53565a] hover:text-[#df5826] cursor-pointer">
+                                <span x-text="copied ? 'Tersalin!' : 'Salin'">Salin</span>
+                            </button>
+                        </div>
+                    @endif
                     @if($staticQrisReady)
                         <details class="group/qris rounded-[12px] border border-[#e9ebf0] bg-white transition open:border-[#ffd2b8]" @if($errors->getBag('qris'.$branch->id)->any()) open @endif>
                             <summary class="flex cursor-pointer list-none items-center justify-between gap-2 rounded-[12px] px-3.5 py-2.5 text-[12.5px] font-semibold text-[#111827] transition hover:bg-[#fafbfc]">

@@ -426,7 +426,7 @@ class Shop extends Model
             : $this->primaryCustomDomain()->first();
 
         if ($custom) {
-            return 'https://'.$custom->domain.($branchSlug ? '/'.$branchSlug : '/menu');
+            return 'https://'.$custom->domain.($branchSlug ? '/menu/'.$branchSlug : '/menu');
         }
 
         return $branchSlug

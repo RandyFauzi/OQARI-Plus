@@ -232,9 +232,14 @@
             <span class="font-bold text-lg" id="cart-total">Rp 0</span>
         </div>
         @php
-            $cartUrl = ($shop->branches_enabled && ! empty($activeBranch))
-                ? route('shop.branch.cart', ['slug' => $shop->slug, 'branchSlug' => $activeBranch->slug, 't' => request()->query('t')])
-                : route('shop.cart', ['slug' => $shop->slug, 't' => request()->query('t')]);
+            $isCustomDomain = request()->attributes->has('custom_domain_shop');
+            $cartUrl = $isCustomDomain
+                ? (($shop->branches_enabled && ! empty($activeBranch))
+                    ? route('custom-domain.branch.cart', ['branchSlug' => $activeBranch->slug, 't' => request()->query('t')])
+                    : route('custom-domain.cart', ['t' => request()->query('t')]))
+                : (($shop->branches_enabled && ! empty($activeBranch))
+                    ? route('shop.branch.cart', ['slug' => $shop->slug, 'branchSlug' => $activeBranch->slug, 't' => request()->query('t')])
+                    : route('shop.cart', ['slug' => $shop->slug, 't' => request()->query('t')]));
         @endphp
         <button onclick="window.location.href='{{ $cartUrl }}'" class="bg-white text-primary px-6 py-2 rounded-full font-bold shadow-md hover:bg-gray-100 flex items-center gap-2">
             <i class="fas fa-shopping-cart"></i>

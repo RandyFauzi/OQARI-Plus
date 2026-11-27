@@ -4,7 +4,24 @@
         window.SHOP_SLUG = '{{ $shop->slug }}';
         window.SHOP_BRANCH_SLUG = @json(($shop->branches_enabled && ! empty($activeBranch)) ? $activeBranch->slug : null);
         window.SHOP_DISCOUNT_SETTINGS = @json($shop->discount_settings ?? []);
-        @if($shop->branches_enabled && ! empty($activeBranch))
+        @php
+            $isCustomDomain = request()->attributes->has('custom_domain_shop');
+        @endphp
+        @if($isCustomDomain)
+            @if($shop->branches_enabled && ! empty($activeBranch))
+                window.SHOP_HOME_URL = '{{ route("custom-domain.branch.menu", ["branchSlug" => $activeBranch->slug]) }}';
+                window.SHOP_CART_URL = '{{ route("custom-domain.branch.cart", ["branchSlug" => $activeBranch->slug]) }}';
+                window.SHOP_TRACKING_URL = '{{ route("custom-domain.branch.tracking", ["branchSlug" => $activeBranch->slug]) }}';
+                window.SHOP_ORDER_URL = '{{ route("custom-domain.branch.order.submit", ["branchSlug" => $activeBranch->slug]) }}';
+                window.SHOP_VOUCHER_URL = '{{ route("custom-domain.branch.voucher.validate", ["branchSlug" => $activeBranch->slug]) }}';
+            @else
+                window.SHOP_HOME_URL = '{{ route("custom-domain.menu") }}';
+                window.SHOP_CART_URL = '{{ route("custom-domain.cart") }}';
+                window.SHOP_TRACKING_URL = '{{ route("custom-domain.tracking") }}';
+                window.SHOP_ORDER_URL = '{{ route("custom-domain.order.submit") }}';
+                window.SHOP_VOUCHER_URL = '{{ route("custom-domain.voucher.validate") }}';
+            @endif
+        @elseif($shop->branches_enabled && ! empty($activeBranch))
             window.SHOP_HOME_URL = '{{ route("shop.branch.menu", ["slug" => $shop->slug, "branchSlug" => $activeBranch->slug]) }}';
             window.SHOP_CART_URL = '{{ route("shop.branch.cart", ["slug" => $shop->slug, "branchSlug" => $activeBranch->slug]) }}';
             window.SHOP_TRACKING_URL = '{{ route("shop.branch.tracking", ["slug" => $shop->slug, "branchSlug" => $activeBranch->slug]) }}';

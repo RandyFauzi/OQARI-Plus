@@ -367,6 +367,12 @@ Route::get('/tracking', [ShopController::class, 'trackingCustomDomain'])->name('
 Route::post('/voucher/validate', [ShopController::class, 'validateVoucherCustomDomain'])->middleware('schema:checkout')->name('custom-domain.voucher.validate');
 Route::post('/order', [ShopController::class, 'submitOrderCustomDomain'])->middleware('schema:checkout')->name('custom-domain.order.submit');
 
+Route::get('/menu/{branchSlug}', [ShopController::class, 'showBranchCustomDomain'])->middleware('schema:catalog')->name('custom-domain.branch.menu');
+Route::get('/menu/{branchSlug}/cart', [ShopController::class, 'cartBranchCustomDomain'])->name('custom-domain.branch.cart');
+Route::get('/menu/{branchSlug}/tracking', [ShopController::class, 'trackingBranchCustomDomain'])->name('custom-domain.branch.tracking');
+Route::post('/menu/{branchSlug}/voucher/validate', [ShopController::class, 'validateVoucherBranchCustomDomain'])->middleware('schema:checkout')->name('custom-domain.branch.voucher.validate');
+Route::post('/menu/{branchSlug}/order', [ShopController::class, 'submitOrderBranchCustomDomain'])->middleware('schema:checkout')->name('custom-domain.branch.order.submit');
+
 // Public Customer Menu
 Route::get('/{slug}', [ShopController::class, 'show'])->middleware('schema:catalog')->name('shop.menu');
 Route::get('/{slug}/cart', [ShopController::class, 'cart'])->name('shop.cart');
