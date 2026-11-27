@@ -120,8 +120,16 @@ class CustomDomainService
         });
 
         $aRecords = $cnameMatched ? [] : $lookup($shopDomain->domain, DNS_A);
-        $aMatched = collect($aRecords)->contains(function (array $record) use ($expectedIp): bool {
-            return (string) ($record['ip'] ?? '') === $expectedIp;
+        $allowedIps = [$expectedIp];
+        if (! $cnameMatched) {
+            foreach ($lookup($expectedTarget, DNS_A) as $targetRecord) {
+                if (! empty($targetRecord['ip'])) {
+                    $allowedIps[] = (string) $targetRecord['ip'];
+                }
+            }
+        }
+        $aMatched = collect($aRecords)->contains(function (array $record) use ($allowedIps): bool {
+            return in_array((string) ($record['ip'] ?? ''), $allowedIps, true);
         });
 
         $pointingMatched = $cnameMatched || $aMatched;
