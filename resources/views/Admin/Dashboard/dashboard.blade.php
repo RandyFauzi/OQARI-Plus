@@ -5764,7 +5764,16 @@ if (res.ok) {
     </div>
 
     <!-- Floating Action Button to Customer Menu -->
-    <a :href="'/' + settings.slug" target="_blank" class="fixed bottom-10 right-10 bg-primary text-white p-4 rounded-full shadow-2xl flex items-center justify-center hover:scale-105 hover:bg-primary-dark transition-all z-[100] group border-4 border-white">
+    @php
+        $customerMenuHref = request()->attributes->has('custom_domain_shop')
+            ? ($shop->branches_enabled && !empty($activeBranch)
+                ? route('custom-domain.branch.menu', ['branchSlug' => $activeBranch->slug])
+                : route('custom-domain.menu'))
+            : ($shop->branches_enabled && !empty($activeBranch)
+                ? route('shop.branch.menu', ['slug' => $shop->slug, 'branchSlug' => $activeBranch->slug])
+                : null);
+    @endphp
+    <a @if($customerMenuHref) href="{{ $customerMenuHref }}" @else :href="'/' + settings.slug" @endif target="_blank" class="fixed bottom-10 right-10 bg-primary text-white p-4 rounded-full shadow-2xl flex items-center justify-center hover:scale-105 hover:bg-primary-dark transition-all z-[100] group border-4 border-white">
         <i class="fas fa-store text-xl"></i>
         <span class="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-[200px] transition-all duration-500 ease-in-out pl-0 group-hover:pl-3 font-bold text-sm">Lihat Web Pelanggan</span>
     </a>

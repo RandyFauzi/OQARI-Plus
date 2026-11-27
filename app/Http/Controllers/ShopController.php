@@ -182,6 +182,10 @@ class ShopController extends Controller
     public function show(Request $request, $slug, ?string $branchSlug = null)
     {
         if ($branchSlug === null && ($customShop = $request->attributes->get('custom_domain_shop'))) {
+            if ($slug === $customShop->slug) {
+                return redirect()->route('custom-domain.menu', $request->query());
+            }
+
             $branchSlug = $slug;
             $slug = $customShop->slug;
         }

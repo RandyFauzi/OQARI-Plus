@@ -218,6 +218,10 @@ class CustomDomainTest extends TestCase
         $this->get('http://order.burgerkat.com/menu/'.$branch->slug.'/cart')
             ->assertOk();
 
+        // Legacy /{shopSlug} URL on custom domain redirects cleanly to /menu
+        $this->get('http://order.burgerkat.com/'.$shop->slug)
+            ->assertRedirect('http://order.burgerkat.com/menu');
+
         // Shop's own owner can access admin dashboard on custom domain
         $this->actingAs($owner)
             ->get('http://order.burgerkat.com/admin/custom-domain')
