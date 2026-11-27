@@ -153,31 +153,86 @@
                         </p>
                     @endif
                     @if($staticQrisReady)
-                        <details class="rounded-[10px] border border-[#e9ebf0] p-3" @if($errors->getBag('qris'.$branch->id)->any()) open @endif>
-                            <summary class="cursor-pointer text-sm font-semibold">
-                                QRIS statis · {{ $staticQrisUrls[$branch->id] ? 'Aktif' : 'Belum diatur' }}
+                        <details class="group/qris rounded-[12px] border border-[#e9ebf0] bg-white transition open:border-[#ffd2b8]" @if($errors->getBag('qris'.$branch->id)->any()) open @endif>
+                            <summary class="flex cursor-pointer list-none items-center justify-between gap-2 rounded-[12px] px-3.5 py-2.5 text-[12.5px] font-semibold text-[#111827] transition hover:bg-[#fafbfc]">
+                                <span class="flex items-center gap-2">
+                                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] bg-[#fff6f0] text-[#df5826]">
+                                        <i class="fas fa-qrcode text-[12px]" aria-hidden="true"></i>
+                                    </span>
+                                    <span>QRIS Statis</span>
+                                </span>
+                                <span class="flex items-center gap-2">
+                                    @if($staticQrisUrls[$branch->id])
+                                        <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                            Aktif
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center rounded-full border border-[#e9ebf0] bg-[#f8f9fa] px-2 py-0.5 text-[10px] font-medium text-[#7f837e]">
+                                            Belum diatur
+                                        </span>
+                                    @endif
+                                    <i class="fas fa-chevron-down text-[10px] text-[#7f837e] transition-transform duration-200 group-open/qris:rotate-180" aria-hidden="true"></i>
+                                </span>
                             </summary>
-                            @if($staticQrisUrls[$branch->id])
-                                <img src="{{ $staticQrisUrls[$branch->id] }}" alt="QRIS {{ $branch->name }}" class="my-3 mx-auto h-36 w-36 object-contain bg-white" loading="lazy">
-                            @endif
-                            <form action="{{ route('admin.branches.qris.update', $branch) }}" method="POST" enctype="multipart/form-data" class="mt-3 space-y-2">
-                                @csrf
-                                @method('PUT')
-                                <label for="static-qris-{{ $branch->id }}" class="block text-xs font-semibold">Gambar QRIS dari penyedia pembayaran outlet</label>
-                                <input type="file" id="static-qris-{{ $branch->id }}" name="static_qris" accept="image/png,image/jpeg" required class="block w-full text-xs">
-                                <p class="text-xs text-[#53565a]">PNG atau JPG, maksimal 3 MB.</p>
-                                @foreach($errors->getBag('qris'.$branch->id)->get('static_qris') as $error)
-                                    <p class="text-xs text-red-700" role="alert">{{ $error }}</p>
-                                @endforeach
-                                <button type="submit" class="min-h-11 rounded-[10px] bg-[#df5826] px-3 text-xs font-semibold text-white">{{ $staticQrisUrls[$branch->id] ? 'Ganti gambar' : 'Simpan QRIS' }}</button>
-                            </form>
-                            @if($staticQrisUrls[$branch->id])
-                                <form action="{{ route('admin.branches.qris.destroy', $branch) }}" method="POST" class="mt-2">
+
+                            <div class="space-y-3 border-t border-[#f1f3f5] p-3.5"
+                                 x-data="{
+                                     fileName: '',
+                                     previewUrl: @js($staticQrisUrls[$branch->id] ?? ''),
+                                     handleFile(event) {
+                                         const file = event.target.files?.[0];
+                                         if (!file) return;
+                                         this.fileName = file.name;
+                                         this.previewUrl = URL.createObjectURL(file);
+                                     }
+                                 }">
+                                <div x-show="previewUrl" x-cloak class="flex flex-col items-center justify-center rounded-[10px] border border-[#e9ebf0] bg-[#f8f9fa] p-3">
+                                    <img :src="previewUrl" alt="QRIS {{ $branch->name }}" class="h-32 w-32 rounded-lg border border-[#e9ebf0] bg-white object-contain p-1.5" loading="lazy">
+                                    <span x-show="fileName" x-text="'Pratinjau: ' + fileName" class="mt-2 max-w-full truncate text-[11px] font-medium text-[#df5826]"></span>
+                                </div>
+
+                                <form action="{{ route('admin.branches.qris.update', $branch) }}" method="POST" enctype="multipart/form-data" class="space-y-2.5">
                                     @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="min-h-11 rounded-[10px] border border-[#e9ebf0] px-3 text-xs font-semibold text-red-700">Nonaktifkan QRIS</button>
+                                    @method('PUT')
+                                    <label for="static-qris-{{ $branch->id }}"
+                                           class="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-[#ffd2b8] bg-[#fff6f0]/40 px-3 py-3.5 text-center transition hover:border-[#df5826] hover:bg-[#fff6f0]">
+                                        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#df5826] shadow-2xs">
+                                            <i class="fas fa-cloud-arrow-up text-[13px]" aria-hidden="true"></i>
+                                        </span>
+                                        <span class="max-w-full truncate text-[12px] font-semibold text-[#111827]" x-text="fileName || 'Pilih gambar QRIS outlet'">Pilih gambar QRIS outlet</span>
+                                        <span class="text-[11px] text-[#7f837e]">PNG atau JPG · Maks. 3 MB (200–2400 px)</span>
+                                        <input type="file" id="static-qris-{{ $branch->id }}" name="static_qris" accept="image/png,image/jpeg" required @change="handleFile($event)" class="sr-only">
+                                    </label>
+
+                                    @foreach($errors->getBag('qris'.$branch->id)->get('static_qris') as $error)
+                                        <p class="flex items-center gap-1.5 text-[11px] font-medium text-red-600" role="alert">
+                                            <i class="fas fa-circle-exclamation shrink-0" aria-hidden="true"></i>
+                                            <span>{{ $error }}</span>
+                                        </p>
+                                    @endforeach
+
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <button type="submit" class="inline-flex h-[36px] flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[9px] bg-[#df5826] px-3 text-[12px] font-semibold text-white shadow-[0px_2px_4px_rgba(223,88,38,0.2)] transition hover:bg-[#c94d00]">
+                                            <i class="fas fa-check text-[11px]" aria-hidden="true"></i>
+                                            <span>{{ $staticQrisUrls[$branch->id] ? 'Ganti gambar' : 'Simpan QRIS' }}</span>
+                                        </button>
+                                        @if($staticQrisUrls[$branch->id])
+                                            <button type="submit" form="remove-qris-{{ $branch->id }}" class="inline-flex h-[36px] cursor-pointer items-center justify-center gap-1.5 rounded-[9px] border border-red-200 bg-white px-3 text-[12px] font-semibold text-red-600 transition hover:bg-red-50">
+                                                <i class="fas fa-ban text-[11px]" aria-hidden="true"></i>
+                                                <span>Nonaktifkan QRIS</span>
+                                            </button>
+                                        @endif
+                                    </div>
                                 </form>
-                            @endif
+
+                                @if($staticQrisUrls[$branch->id])
+                                    <form id="remove-qris-{{ $branch->id }}" action="{{ route('admin.branches.qris.destroy', $branch) }}" method="POST" class="hidden">
+                                        @csrf
+                                        @method('DELETE')
+                                    </form>
+                                @endif
+                            </div>
                         </details>
                     @endif
                 </div>

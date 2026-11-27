@@ -93,13 +93,13 @@
 {{-- ═══════════════════════════════════════════════════════════ --}}
 {{-- TOP HEADER (Figma 45:12178)                                 --}}
 {{-- ═══════════════════════════════════════════════════════════ --}}
-<header class="h-[52px] bg-white border-b border-[#e6e5e0] px-4 lg:px-[26px] flex items-center justify-between shrink-0 sticky top-0 z-20">
-    <div class="flex items-center gap-3">
+<header class="h-[52px] bg-white border-b border-[#e6e5e0] px-3 sm:px-4 lg:px-[26px] flex items-center justify-between gap-2 shrink-0 sticky top-0 z-20">
+    <div class="flex items-center gap-2 sm:gap-3 min-w-0">
         <button type="button" @click="$dispatch('toggle-mobile-nav')" aria-label="Buka menu navigasi" aria-controls="app-sidebar"
-            class="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center text-[#1e211f] hover:bg-gray-200 transition-colors md:hidden">
+            class="w-9 h-9 shrink-0 rounded-lg bg-gray-100 flex items-center justify-center text-[#1e211f] hover:bg-gray-200 transition-colors md:hidden">
             <i class="fas fa-bars text-base"></i>
         </button>
-        <span class="text-[13px] font-semibold text-[#1e211f]">Kasir</span>
+        <span class="text-[13px] font-semibold text-[#1e211f] truncate">Kasir</span>
         @if($activeSession)
         <span class="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#eaf7ef] text-[#289e5c] text-[10.5px] font-semibold">
             <span class="w-1.5 h-1.5 rounded-full bg-[#289e5c]"></span> Shift Aktif
@@ -142,8 +142,10 @@
                 <span class="hidden sm:inline">Touch</span>
             </button>
         </div>
-        <a href="{{ route('admin.register.index') }}" class="h-[34px] px-[10px] rounded-[9px] bg-white border border-[#e6e5e0] hover:border-[#df5826] text-[11px] font-semibold text-[#1e211f] inline-flex items-center gap-1.5 transition">
-            <span>Kas &amp; Tutup Shift</span>
+        <a href="{{ route('admin.register.index') }}" class="h-[34px] px-2.5 sm:px-[10px] rounded-[9px] bg-white border border-[#e6e5e0] hover:border-[#df5826] text-[11px] font-semibold text-[#1e211f] inline-flex items-center gap-1.5 transition shrink-0">
+            <i class="fas fa-cash-register text-[#df5826] sm:hidden" aria-hidden="true"></i>
+            <span class="hidden sm:inline">Kas &amp; Tutup Shift</span>
+            <span class="sm:hidden">Shift</span>
         </a>
         @endif
     </div>
@@ -184,10 +186,10 @@
                             <p class="grow text-sm font-semibold text-[#111827]" x-text="'#' + order.id + ' · ' + order.customer_name + ' · ' + Number(order.grand_total).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })"></p>
                             <label class="sr-only" :for="'qris-amount-' + order.id">Nominal dana masuk dalam rupiah</label>
                             <input :id="'qris-amount-' + order.id" name="received_amount" type="number" min="0" max="9999999999.99" step="0.01" inputmode="decimal" required placeholder="Dana masuk (Rp)"
-                                   class="min-h-11 w-36 rounded-[10px] border border-amber-200 bg-white px-3 text-sm">
+                                   class="min-h-11 w-full sm:w-36 rounded-[10px] border border-amber-200 bg-white px-3 text-sm">
                             <label class="sr-only" :for="'qris-reference-' + order.id">Referensi transaksi QRIS</label>
                             <input :id="'qris-reference-' + order.id" name="reference" required maxlength="100" placeholder="Referensi transaksi"
-                                   class="min-h-11 rounded-[10px] border border-amber-200 bg-white px-3 text-sm">
+                                   class="min-h-11 w-full sm:w-auto sm:flex-1 rounded-[10px] border border-amber-200 bg-white px-3 text-sm">
                             <button type="submit" :disabled="staticQrisVerifying !== null" class="min-h-11 rounded-[10px] bg-[#df5826] px-3 text-xs font-semibold text-white disabled:opacity-50">
                                 <span x-text="staticQrisVerifying === order.id ? 'Memverifikasi…' : 'Konfirmasi dana masuk'"></span>
                             </button>
@@ -206,7 +208,7 @@
                 <div x-show="activeOrders.length > 0" class="flex items-center gap-3 overflow-x-auto hide-scroll pb-1">
                     <template x-for="(order, oIdx) in activeOrders" :key="order.id">
                         <div @click="goToActiveOrder(order)"
-                             class="min-w-[270px] sm:min-w-[290px] max-w-[340px] bg-white border border-[#e5e7eb] hover:border-[#df5826]/60 rounded-[14px] p-2.5 sm:p-3 flex items-center justify-between gap-3 shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:shadow-md transition-all cursor-pointer group shrink-0 select-none">
+                             class="min-w-[235px] sm:min-w-[270px] max-w-[320px] bg-white border border-[#e5e7eb] hover:border-[#df5826]/60 rounded-[14px] p-2.5 sm:p-3 flex items-center justify-between gap-3 shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:shadow-md transition-all cursor-pointer group shrink-0 select-none">
                             
                             {{-- Left: Channel / Order Type Indicator (DO vs DL) matching Pesanan Aktif & Overview --}}
                             <div class="flex items-center gap-2.5 min-w-0">
@@ -322,7 +324,7 @@
                     <p class="text-[11.5px] text-[#8b8e93] mt-1">Tambahkan produk melalui halaman Kelola Menu terlebih dahulu.</p>
                 </div>
             @else
-                <div class="pt-[16px] grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-[16px]">
+                <div class="pt-3.5 sm:pt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2.5 sm:gap-3.5 xl:gap-4">
                     @foreach($products as $product)
                     @php
                         $productPayload = [
@@ -347,7 +349,7 @@
                         x-show="matchesFilter({{ $product->category_id ?? 'null' }}, '{{ addslashes($product->name) }}', {{ (int) ($product->sold_count ?? 0) }}, {{ $product->is_best_seller ? 'true' : 'false' }})"
                         class="product-card group {{ $product->is_sold_out ? 'bg-gray-50/80 border-gray-200 opacity-75' : 'bg-white border-[#e6e5e0] hover:border-[#df5826]/50' }} rounded-[18px] overflow-hidden flex flex-col justify-between text-left shadow-[0px_4px_16px_0px_rgba(17,24,39,0.03)] hover:shadow-md transition-all duration-200">
                         {{-- Product Image (Flush to top, matching Figma) --}}
-                        <div class="bg-[#f8f9fa] border-b border-[#e6e5e0] h-[135px] sm:h-[150px] xl:h-[160px] w-full overflow-hidden relative cursor-pointer"
+                        <div class="bg-[#f8f9fa] border-b border-[#e6e5e0] h-[100px] sm:h-[130px] xl:h-[150px] w-full overflow-hidden relative cursor-pointer"
                              @click="handleProductClick({{ Illuminate\Support\Js::from($productPayload) }}, 'DINE_IN')">
                             @if($product->is_sold_out)
                                 <span class="absolute top-2.5 left-2.5 z-10 bg-red-600 text-white text-[9.5px] font-black px-2.5 py-0.5 rounded-full shadow-md flex items-center gap-1 uppercase tracking-wider">
@@ -374,11 +376,11 @@
                         </div>
 
                         {{-- Product Details & Buttons Container --}}
-                        <div class="p-3 sm:p-3.5 pt-3 flex flex-col flex-1 justify-between gap-2.5">
+                        <div class="p-2.5 sm:p-3.5 pt-2.5 flex flex-col flex-1 justify-between gap-2">
                             <div>
                                 {{-- Product Name --}}
                                 <div class="flex items-center gap-1.5 justify-between">
-                                    <h3 class="text-[14px] sm:text-[15px] font-bold text-[#111827] leading-snug truncate" title="{{ $product->name }}">
+                                    <h3 class="text-[13px] sm:text-[14.5px] font-bold text-[#111827] leading-snug truncate" title="{{ $product->name }}">
                                         {{ $product->name }}
                                     </h3>
                                     @if($product->is_sold_out)
@@ -419,17 +421,17 @@
                                         <span>Sold Out (Habis)</span>
                                     </button>
                                 @else
-                                    <div x-show="fulfillmentType !== 'DELIVERY'" class="flex flex-col gap-2 w-full">
+                                    <div x-show="fulfillmentType !== 'DELIVERY'" class="grid grid-cols-2 gap-1.5 w-full">
                                         <button type="button"
                                             @click="handleProductClick({{ Illuminate\Support\Js::from($productPayload) }}, 'DINE_IN')"
-                                            class="w-full py-2.5 px-3 rounded-[11px] bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:opacity-95 text-white text-[12.5px] font-bold flex items-center justify-center gap-2 shadow-xs hover:shadow transition active:scale-[0.98] cursor-pointer">
-                                            <i class="fas fa-utensils text-[11px]"></i>
+                                            class="w-full py-2 px-1.5 sm:px-2.5 rounded-[10px] bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:opacity-95 text-white text-[11px] sm:text-[12px] font-bold flex items-center justify-center gap-1.5 shadow-xs hover:shadow transition active:scale-[0.98] cursor-pointer">
+                                            <i class="fas fa-utensils text-[10px]"></i>
                                             <span>Dine In</span>
                                         </button>
                                         <button type="button"
                                             @click="handleProductClick({{ Illuminate\Support\Js::from($productPayload) }}, 'TAKEAWAY')"
-                                            class="w-full py-2.5 px-3 rounded-[11px] bg-white hover:bg-[#fff9f6] border border-[#ea580c] text-[#ea580c] text-[12.5px] font-bold flex items-center justify-center gap-2 shadow-2xs transition active:scale-[0.98] cursor-pointer">
-                                            <i class="fas fa-shopping-bag text-[11px]"></i>
+                                            class="w-full py-2 px-1.5 sm:px-2.5 rounded-[10px] bg-white hover:bg-[#fff9f6] border border-[#ea580c] text-[#ea580c] text-[11px] sm:text-[12px] font-bold flex items-center justify-center gap-1.5 shadow-2xs transition active:scale-[0.98] cursor-pointer">
+                                            <i class="fas fa-shopping-bag text-[10px]"></i>
                                             <span>Takeaway</span>
                                         </button>
                                     </div>
@@ -508,7 +510,7 @@
 
     {{-- RIGHT SIDEBAR: CURRENT ORDER / Pesanan Baru (Figma 45:12496) --}}
     <aside :class="showMobileCart ? 'translate-x-0' : (isCartMinimized ? 'translate-x-full lg:hidden' : 'translate-x-full lg:translate-x-0')"
-        class="fixed inset-y-0 right-0 z-40 w-full sm:w-[400px] lg:sticky lg:top-[68px] lg:right-auto lg:bottom-auto lg:z-10 lg:w-[350px] xl:w-[374px] shrink-0 transition-transform duration-300 ease-in-out bg-white border border-[#e6e5e0] lg:rounded-[16px] flex flex-col overflow-hidden shadow-2xl lg:shadow-none h-full h-[100dvh] max-h-[100dvh] lg:h-[calc(100dvh-84px)] lg:max-h-[calc(100dvh-84px)]">
+        class="fixed inset-y-0 right-0 z-40 w-full sm:w-[400px] lg:sticky lg:top-[68px] lg:right-auto lg:bottom-auto lg:z-10 lg:w-[310px] xl:w-[350px] 2xl:w-[374px] shrink-0 transition-transform duration-300 ease-in-out bg-white border border-[#e6e5e0] lg:rounded-[16px] flex flex-col overflow-hidden shadow-2xl lg:shadow-none h-[100dvh] max-h-[100dvh] lg:h-[calc(100dvh-84px)] lg:max-h-[calc(100dvh-84px)]">
 
         {{-- Mobile Close Bar --}}
         <div class="lg:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-[#e6e5e0] shrink-0">
@@ -1349,7 +1351,7 @@
             
             {{-- TAB 1: QUICK DISCOUNT (Figma 3x2 Grid) --}}
             <div x-show="discountModal.tab === 'preset'" class="space-y-3">
-                <div class="grid grid-cols-3 gap-2.5">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
                     {{-- 1. 5% Discount --}}
                     <button type="button" @click="applyQuickDiscount('percentage', 5, '5% Discount')"
                         class="p-3 rounded-[12px] border border-[#e6e5e0] hover:border-[#059669] bg-white hover:bg-[#e8f8f0]/40 text-left transition shadow-2xs flex flex-col justify-between gap-2.5 group cursor-pointer">
