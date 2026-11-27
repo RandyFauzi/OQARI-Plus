@@ -129,8 +129,11 @@ class CustomDomainTest extends TestCase
 
         $this->assertTrue($verified->fresh()->isActive());
 
-        // Now storefront is live on custom domain
+        // Now storefront is live on /menu and root / redirects to dashboard login
         $this->get('http://order.burgerkat.com/')
+            ->assertRedirect('http://order.burgerkat.com/admin/login');
+
+        $this->get('http://order.burgerkat.com/menu')
             ->assertOk()
             ->assertSee('Smash Burger Hostinger');
     }
@@ -185,12 +188,15 @@ class CustomDomainTest extends TestCase
 
         $this->assertTrue($verified->isActive());
         $this->assertSame('cf-host-999', $verified->cloudflare_hostname_id);
-        $this->assertSame('https://order.burgerkat.com', $shop->storefrontBaseUrl());
+        $this->assertSame('https://order.burgerkat.com/menu', $shop->storefrontBaseUrl());
 
-        // Custom domain renders shop storefront at root / and /menu
+        // Custom domain root / redirects guest to login, owner to dashboard, and /menu renders storefront
         $this->get('http://order.burgerkat.com/')
-            ->assertOk()
-            ->assertSee('Smash Burger Custom');
+            ->assertRedirect('http://order.burgerkat.com/admin/login');
+
+        $this->actingAs($owner)
+            ->get('http://order.burgerkat.com/')
+            ->assertRedirect('http://order.burgerkat.com/admin/dashboard');
 
         $this->get('http://order.burgerkat.com/menu')
             ->assertOk()

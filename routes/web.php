@@ -37,8 +37,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function (Request $request) {
-    if ($request->attributes->has('custom_domain_shop')) {
-        return app(ShopController::class)->showCustomDomain($request);
+    if ($customShop = $request->attributes->get('custom_domain_shop')) {
+        if (auth()->check()) {
+            if ((int) auth()->user()->shop_id === (int) $customShop->id) {
+                return redirect()->route(auth()->user()->homeRoute());
+            }
+
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        return redirect()->route('login');
     }
 
     $dashboardUrl = null;
