@@ -25,6 +25,13 @@
             @endif
         </div>
         <div class="flex flex-wrap items-center gap-2.5">
+            @if(auth()->user()?->role === 'owner' && config('custom_domains.enabled'))
+                <a href="{{ route('admin.custom-domain.index') }}"
+                   class="inline-flex items-center gap-2 rounded-xl border border-[#ffd6bd] bg-[#fff6f0] px-4 py-3 text-xs font-bold text-[#df5826] transition hover:bg-[#ffe9db]">
+                    <i class="fas fa-globe" aria-hidden="true"></i>
+                    <span>Domain Kustom</span>
+                </a>
+            @endif
             @if(!empty($operatingBranch) && !empty($branchOverriddenKeys))
                 <button type="button"
                         @click="if (confirm('Kembalikan semua pengaturan {{ $operatingBranch->name }} ke default bisnis {{ $shop->name }}?')) { fetch(@js(route('branch.admin.settings.reset-branch', ['operatingBranch' => $operatingBranch->slug])), { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' } }).then(r => r.json()).then(d => { if (d.success) window.location.reload(); }); }"

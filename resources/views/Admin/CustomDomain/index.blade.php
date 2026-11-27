@@ -183,5 +183,64 @@
             </div>
         </section>
     </div>
+
+    {{-- Panduan Lengkap Setup Custom Domain --}}
+    <section class="overflow-hidden rounded-[14px] border border-[#e9ebf0] bg-white shadow-[0px_2px_4px_rgba(38,39,35,0.03)]" aria-labelledby="custom-domain-guide-heading">
+        <div class="flex items-center gap-3 border-b border-[#e9ebf0] px-5 py-4">
+            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#fff6f0] text-[#df5826]">
+                <i class="fas fa-book-open text-[14px]" aria-hidden="true"></i>
+            </span>
+            <div>
+                <h2 id="custom-domain-guide-heading" class="text-[16px] font-bold text-[#111827]">Panduan Setting Domain Kustom</h2>
+                <p class="mt-0.5 text-[12px] text-[#7f837e]">Ikuti langkah berikut untuk menghubungkan domain bisnis dengan SSL HTTPS otomatis.</p>
+            </div>
+        </div>
+
+        <div class="grid gap-5 p-5 md:grid-cols-2">
+            {{-- Langkah Pemilik Toko --}}
+            <div class="space-y-3 rounded-[12px] border border-[#f1f3f5] bg-[#f8f9fa] p-4">
+                <div class="flex items-center gap-2">
+                    <span class="rounded-full bg-[#fff6f0] px-2.5 py-0.5 text-[11px] font-bold text-[#df5826] border border-[#ffdec9]">Untuk Pemilik Toko</span>
+                    <h3 class="text-[13px] font-bold text-[#111827]">Menghubungkan Domain Sendiri</h3>
+                </div>
+                <ol class="space-y-2.5 text-[12.5px] text-[#53565a]">
+                    <li class="flex items-start gap-2.5">
+                        <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#fff6f0] text-[10px] font-bold text-[#df5826] ring-1 ring-[#ffdec9]">1</span>
+                        <span>Masukkan subdomain bisnis Anda di form <strong>Tambah Domain Bisnis</strong> (misal <code class="rounded bg-white px-1 font-mono text-[11px]">order.namatoko.com</code>), lalu klik <strong>Daftarkan Domain</strong>.</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#fff6f0] text-[10px] font-bold text-[#df5826] ring-1 ring-[#ffdec9]">2</span>
+                        <span>Buka panel DNS domain Anda (Cloudflare / Niagahoster / GoDaddy), lalu tambahkan <strong>CNAME</strong> mengarah ke <code class="rounded bg-white px-1 font-mono text-[11px]">{{ $cnameTarget }}</code> dan <strong>TXT</strong> verifikasi yang muncul di kartu domain.</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#fff6f0] text-[10px] font-bold text-[#df5826] ring-1 ring-[#ffdec9]">3</span>
+                        <span>Tunggu propagasi DNS (1–10 menit), lalu klik tombol <strong>Verifikasi DNS</strong>. Jika berhasil, status berubah menjadi <strong>Aktif &amp; Terhubung</strong>.</span>
+                    </li>
+                </ol>
+            </div>
+
+            {{-- Langkah Setup Cloudflare for SaaS (Server) --}}
+            <div class="space-y-3 rounded-[12px] border border-[#f1f3f5] bg-[#f8f9fa] p-4">
+                <div class="flex items-center gap-2">
+                    <span class="rounded-full bg-sky-50 px-2.5 py-0.5 text-[11px] font-bold text-sky-700 border border-sky-200">Setup Awal Server (1x)</span>
+                    <h3 class="text-[13px] font-bold text-[#111827]">Cloudflare for SaaS + Hostinger</h3>
+                </div>
+                <ol class="space-y-2.5 text-[12.5px] text-[#53565a]">
+                    <li class="flex items-start gap-2.5">
+                        <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-bold text-sky-700 ring-1 ring-sky-200">1</span>
+                        <span>Tambahkan domain utama SaaS (<code class="rounded bg-white px-1 font-mono text-[11px]">oqariplus.appku.site</code>) ke <strong>Cloudflare</strong>, lalu aktifkan menu <strong>SSL/TLS → Custom Hostnames</strong> (Cloudflare for SaaS).</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-bold text-sky-700 ring-1 ring-sky-200">2</span>
+                        <span>Di Cloudflare DNS, buat record <code class="rounded bg-white px-1 font-mono text-[11px]">A</code> / <code class="rounded bg-white px-1 font-mono text-[11px]">CNAME</code> untuk <code class="rounded bg-white px-1 font-mono text-[11px]">{{ $cnameTarget }}</code> (Proxied / awan oranye) menuju IP/origin Hostinger, dan jadikan sebagai <strong>Fallback Origin</strong>.</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-bold text-sky-700 ring-1 ring-sky-200">3</span>
+                        <span>Isi <code class="rounded bg-white px-1 font-mono text-[11px]">CLOUDFLARE_SAAS_ENABLED=true</code>, <code class="rounded bg-white px-1 font-mono text-[11px]">CLOUDFLARE_ZONE_ID</code>, dan <code class="rounded bg-white px-1 font-mono text-[11px]">CLOUDFLARE_API_TOKEN</code> di <code class="rounded bg-white px-1 font-mono text-[11px]">.env</code> server lalu jalankan <code class="rounded bg-white px-1 font-mono text-[11px]">php artisan migrate --force</code>.</span>
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </section>
 </div>
 @endsection
