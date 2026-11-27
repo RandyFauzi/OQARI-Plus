@@ -99,6 +99,13 @@ if ($member?->role === 'superadmin') {
                 </a>
             @endif
 
+            @if($member->role === 'owner' && config('custom_domains.enabled'))
+                <a href="{{ route('admin.custom-domain.index') }}" class="sidebar-link mb-2 {{ request()->routeIs('admin.custom-domain.*') ? 'is-active' : '' }}" title="Domain Kustom" aria-label="Domain Kustom" @if(request()->routeIs('admin.custom-domain.*')) aria-current="page" @endif>
+                    <i class="fas fa-globe" aria-hidden="true"></i>
+                    <span x-show="!isMinimized || mobileNavOpen">Domain Kustom</span>
+                </a>
+            @endif
+
             @if(config('oqari_mcp.enabled') && app(\App\Services\McpAccess::class)->role($member))
                 <a href="{{ route('admin.integrations.mcp') }}" class="sidebar-link mb-2 {{ request()->routeIs('admin.integrations.mcp*') ? 'is-active' : '' }}" title="Integrasi MCP" aria-label="Integrasi MCP" @if(request()->routeIs('admin.integrations.mcp*')) aria-current="page" @endif>
                     <i class="fas fa-plug" aria-hidden="true"></i>

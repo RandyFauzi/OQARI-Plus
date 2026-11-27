@@ -6,6 +6,7 @@ use App\Services\MediaService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 class Shop extends Model
@@ -404,5 +405,32 @@ class Shop extends Model
         }
 
         return $currentTime >= $open && $currentTime <= $close;
+    }
+
+    public function domains(): HasMany
+    {
+        return $this->hasMany(ShopDomain::class);
+    }
+
+    public function primaryCustomDomain(): HasOne
+    {
+        return $this->hasOne(ShopDomain::class)
+            ->where('status', ShopDomain::STATUS_ACTIVE)
+            ->where('is_primary', true);
+    }
+
+    public function storefrontBaseUrl(?string $branchSlug = null): string
+    {
+        $custom = $this->relationLoaded('primaryCustomDomain')
+            ? $this->primaryCustomDomain
+            : $this->primaryCustomDomain()->first();
+
+        if ($custom) {
+            return 'https://'.$custom->domain.($branchSlug ? '/'.$branchSlug : '');
+        }
+
+        return $branchSlug
+            ? route('shop.branch.menu', ['slug' => $this->slug, 'branchSlug' => $branchSlug])
+            : route('shop.menu', ['slug' => $this->slug]);
     }
 }

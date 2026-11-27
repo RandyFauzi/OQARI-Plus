@@ -28,6 +28,12 @@ class ShopController extends Controller
 {
     protected function resolveShop($slug)
     {
+        if ($customShop = request()->attributes->get('custom_domain_shop')) {
+            abort_if($customShop->isSuspended(), 404);
+
+            return $customShop;
+        }
+
         $shop = Shop::where('slug', $slug)->first();
         if (! $shop) {
             $history = ShopSlugHistory::where('old_slug', $slug)->first();
@@ -88,6 +94,46 @@ class ShopController extends Controller
         return $branch;
     }
 
+    public function showCustomDomain(Request $request)
+    {
+        $shop = $request->attributes->get('custom_domain_shop');
+        abort_unless($shop, 404);
+
+        return $this->show($request, $shop->slug);
+    }
+
+    public function cartCustomDomain(Request $request)
+    {
+        $shop = $request->attributes->get('custom_domain_shop');
+        abort_unless($shop, 404);
+
+        return $this->cart($request, $shop->slug);
+    }
+
+    public function trackingCustomDomain(Request $request)
+    {
+        $shop = $request->attributes->get('custom_domain_shop');
+        abort_unless($shop, 404);
+
+        return $this->tracking($request, $shop->slug);
+    }
+
+    public function validateVoucherCustomDomain(Request $request): JsonResponse
+    {
+        $shop = $request->attributes->get('custom_domain_shop');
+        abort_unless($shop, 404);
+
+        return $this->validateVoucher($request, $shop->slug);
+    }
+
+    public function submitOrderCustomDomain(Request $request): JsonResponse
+    {
+        $shop = $request->attributes->get('custom_domain_shop');
+        abort_unless($shop, 404);
+
+        return $this->submitOrder($request, $shop->slug);
+    }
+
     public function showBranch(Request $request, string $slug, string $branchSlug)
     {
         return $this->show($request, $slug, $branchSlug);
@@ -95,6 +141,11 @@ class ShopController extends Controller
 
     public function show(Request $request, $slug, ?string $branchSlug = null)
     {
+        if ($branchSlug === null && ($customShop = $request->attributes->get('custom_domain_shop'))) {
+            $branchSlug = $slug;
+            $slug = $customShop->slug;
+        }
+
         $shop = $this->resolveShop($slug);
 
         $categories = Category::where('shop_id', $shop->id)

@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureFeatureSchemaIsReady;
 use App\Http\Middleware\EnsureShopIsNotSuspended;
 use App\Http\Middleware\IsSuperAdmin;
 use App\Http\Middleware\ResolveBranch;
+use App\Http\Middleware\ResolveCustomDomain;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prependToPriorityList(SubstituteBindings::class, ResolveBranch::class);
+        $middleware->prependToGroup('web', ResolveCustomDomain::class);
         $middleware->appendToGroup('web', EnsureAccountIsActive::class);
         $middleware->appendToGroup('web', EnsureShopIsNotSuspended::class);
         $middleware->appendToGroup('api', EnsureShopIsNotSuspended::class);

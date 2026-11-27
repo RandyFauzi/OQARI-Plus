@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\CafeUserController;
 use App\Http\Controllers\Admin\CashRegisterController;
 use App\Http\Controllers\Admin\CentralKitchenController;
+use App\Http\Controllers\Admin\CustomDomainController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HppCalculatorController;
 use App\Http\Controllers\Admin\InventoryController;
@@ -32,9 +33,14 @@ use App\Http\Controllers\SuperAdmin\UserController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Middleware\ResolveBranch;
 use App\Models\Order;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
+Route::get('/', function (Request $request) {
+    if ($request->attributes->has('custom_domain_shop')) {
+        return app(ShopController::class)->showCustomDomain($request);
+    }
+
     $dashboardUrl = null;
     if (auth()->check()) {
         $dashboardUrl = route(auth()->user()->homeRoute());
@@ -55,6 +61,13 @@ Route::middleware('auth')->controller(McpConnectionController::class)->group(fun
     Route::post('/admin/integrations/mcp', 'store')->name('admin.integrations.mcp.store');
     Route::post('/admin/integrations/mcp/{connection}/reveal', 'reveal')->name('admin.integrations.mcp.reveal');
     Route::delete('/admin/integrations/mcp/{connection}', 'destroy')->name('admin.integrations.mcp.destroy');
+});
+
+Route::middleware('auth')->controller(CustomDomainController::class)->group(function (): void {
+    Route::get('/admin/custom-domain', 'index')->name('admin.custom-domain.index');
+    Route::post('/admin/custom-domain', 'store')->name('admin.custom-domain.store');
+    Route::post('/admin/custom-domain/{domain}/verify', 'verify')->whereNumber('domain')->name('admin.custom-domain.verify');
+    Route::delete('/admin/custom-domain/{domain}', 'destroy')->whereNumber('domain')->name('admin.custom-domain.destroy');
 });
 
 Route::middleware(['auth', 'schema:branches'])->prefix('admin/branches')->name('admin.branches.')->group(function () {
@@ -333,6 +346,12 @@ Route::middleware(['auth', 'superadmin', 'schema:platform'])->prefix('superadmin
 // Customer Receipt (Signed URLs)
 Route::get('/receipt/{order}', [ReceiptController::class, 'show'])->middleware('schema:orders')->name('receipt.web');
 Route::get('/receipt/{order}/pdf', [ReceiptController::class, 'downloadPdf'])->middleware('schema:orders')->name('receipt.pdf');
+
+// Custom Domain Storefront (resolved by ResolveCustomDomain middleware)
+Route::get('/cart', [ShopController::class, 'cartCustomDomain'])->name('custom-domain.cart');
+Route::get('/tracking', [ShopController::class, 'trackingCustomDomain'])->name('custom-domain.tracking');
+Route::post('/voucher/validate', [ShopController::class, 'validateVoucherCustomDomain'])->middleware('schema:checkout')->name('custom-domain.voucher.validate');
+Route::post('/order', [ShopController::class, 'submitOrderCustomDomain'])->middleware('schema:checkout')->name('custom-domain.order.submit');
 
 // Public Customer Menu
 Route::get('/{slug}', [ShopController::class, 'show'])->middleware('schema:catalog')->name('shop.menu');
