@@ -51,7 +51,7 @@ class CustomDomainTest extends TestCase
 
         // System domain rejected
         $this->actingAs($ownerA)->post(route('admin.custom-domain.store'), [
-            'domain' => 'sub.appku.site',
+            'domain' => 'sub.oqariplus.appku.site',
         ])->assertSessionHasErrors('domain');
 
         // IP rejected

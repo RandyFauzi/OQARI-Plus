@@ -31,6 +31,8 @@ return [
         'localhost',
         '127.0.0.1',
         '::1',
+        'appku.site',
+        'www.appku.site',
         'oqariplus.appku.site',
         'www.oqariplus.appku.site',
         'cname.oqariplus.appku.site',
@@ -38,7 +40,7 @@ return [
     ]))),
 
     'blocked_suffixes' => [
-        '.appku.site',
+        '.oqariplus.appku.site',
         '.oqari.test',
         '.localhost',
         '.local',
