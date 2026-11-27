@@ -25,13 +25,6 @@
             @endif
         </div>
         <div class="flex flex-wrap items-center gap-2.5">
-            @if(auth()->user()?->role === 'owner' && config('custom_domains.enabled'))
-                <a href="{{ route('admin.custom-domain.index') }}"
-                   class="inline-flex items-center gap-2 rounded-xl border border-[#ffd6bd] bg-[#fff6f0] px-4 py-3 text-xs font-bold text-[#df5826] transition hover:bg-[#ffe9db]">
-                    <i class="fas fa-globe" aria-hidden="true"></i>
-                    <span>Domain Kustom</span>
-                </a>
-            @endif
             @if(!empty($operatingBranch) && !empty($branchOverriddenKeys))
                 <button type="button"
                         @click="if (confirm('Kembalikan semua pengaturan {{ $operatingBranch->name }} ke default bisnis {{ $shop->name }}?')) { fetch(@js(route('branch.admin.settings.reset-branch', ['operatingBranch' => $operatingBranch->slug])), { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' } }).then(r => r.json()).then(d => { if (d.success) window.location.reload(); }); }"
@@ -133,6 +126,33 @@
                             </div>
                             <p class="text-xs text-muted mt-2"><i class="fas fa-lock mr-1"></i> Alamat unik menu pelanggan Anda bersifat permanen untuk mencegah rusaknya QR Code.</p>
                         </div>
+
+                        @if(auth()->user()?->role === 'owner' && config('custom_domains.enabled'))
+                            @php $activeCustomDomain = $shop->primaryCustomDomain()->first(); @endphp
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-[#e9ebf0] bg-[#f8f9fa] p-4">
+                                <div class="flex items-start gap-3 min-w-0">
+                                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#fff6f0] text-[#df5826]">
+                                        <i class="fas fa-globe text-sm" aria-hidden="true"></i>
+                                    </span>
+                                    <div class="min-w-0">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <p class="text-xs font-bold text-[#111827]">Domain Kustom Bisnis</p>
+                                            @if($activeCustomDomain)
+                                                <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Aktif</span>
+                                            @endif
+                                        </div>
+                                        <p class="mt-0.5 truncate text-xs text-[#53565a]">
+                                            {{ $activeCustomDomain ? 'https://' . $activeCustomDomain->domain : 'Ingin pakai domain sendiri (misal order.namatoko.com)?' }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <a href="{{ route('admin.custom-domain.index') }}"
+                                   class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[#ffd6bd] bg-[#fff6f0] px-3.5 py-2 text-xs font-bold text-[#df5826] transition hover:bg-[#ffe9db]">
+                                    <span>{{ $activeCustomDomain ? 'Kelola Domain' : 'Atur Domain Kustom' }}</span>
+                                    <i class="fas fa-arrow-right text-[10px]" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
 

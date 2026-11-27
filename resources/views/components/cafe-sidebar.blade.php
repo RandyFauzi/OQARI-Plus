@@ -33,19 +33,22 @@ $groups = [
         ['view-reports', 'Laporan Keuangan', 'fa-book', 'admin.reports.index', 'images/sparta/nav-laporan.svg'],
         ['view-reports', 'Log Aktivitas', 'fa-clock-rotate-left', 'admin.activity-logs.index', 'images/sparta/nav-log.svg'],
     ],
-    'Pengaturan' => [
+    'Pengaturan' => array_values(array_filter([
         ['manage-branch-tables', 'Meja & QR', 'fa-qrcode', 'admin.tables.index', 'images/sparta/nav-meja-qr.svg'],
         ['manage-settings', 'Toko Saya', 'fa-store', 'admin.settings.index', 'images/sparta/nav-toko.svg'],
+        ($member?->role === 'owner' && config('custom_domains.enabled'))
+            ? [null, 'Domain Kustom', 'fa-globe', 'admin.custom-domain.index', null]
+            : null,
         ['manage-settings', 'Jam Operasional', 'fa-clock', 'admin.operating-hours.index', 'images/sparta/clock.svg'],
         ['manage-settings', 'Pengaturan Struk', 'fa-print', 'admin.receipt-settings.index', 'images/sparta/nav-struk.svg'],
         ['manage-hpp', 'Kalkulator HPP', 'fa-calculator', 'admin.hpp.index', 'images/sparta/nav-hpp.svg'],
         ['view-vouchers', 'Voucher Promo', 'fa-ticket-alt', 'admin.vouchers.index', 'images/sparta/nav-voucher.svg'],
-    ],
+    ])),
 ];
 if ($cafe?->branches_enabled && $member->role === 'owner' && !$activeBranch) {
     $businessRoutes = [
         'admin.menu.index', 'admin.addons.index', 'admin.purchases.index', 'admin.production.index',
-        'admin.users.index', 'admin.settings.index', 'admin.hpp.index', 'admin.vouchers.index',
+        'admin.users.index', 'admin.settings.index', 'admin.custom-domain.index', 'admin.hpp.index', 'admin.vouchers.index',
     ];
     $groups = array_map(fn (array $links) => array_filter($links, fn (array $link) => in_array($link[3], $businessRoutes, true)), $groups);
 }
@@ -96,13 +99,6 @@ if ($member?->role === 'superadmin') {
                 <a href="{{ route('admin.branches.index') }}" class="sidebar-link mb-2 {{ request()->routeIs('admin.branches.*') ? 'is-active' : '' }}" title="Cabang" aria-label="Cabang" @if(request()->routeIs('admin.branches.*')) aria-current="page" @endif>
                     <i class="fas fa-store" aria-hidden="true"></i>
                     <span x-show="!isMinimized || mobileNavOpen">{{ $member->role === 'owner' ? 'Semua Cabang' : 'Cabang Saya' }}</span>
-                </a>
-            @endif
-
-            @if($member->role === 'owner' && config('custom_domains.enabled'))
-                <a href="{{ route('admin.custom-domain.index') }}" class="sidebar-link mb-2 {{ request()->routeIs('admin.custom-domain.*') ? 'is-active' : '' }}" title="Domain Kustom" aria-label="Domain Kustom" @if(request()->routeIs('admin.custom-domain.*')) aria-current="page" @endif>
-                    <i class="fas fa-globe" aria-hidden="true"></i>
-                    <span x-show="!isMinimized || mobileNavOpen">Domain Kustom</span>
                 </a>
             @endif
 

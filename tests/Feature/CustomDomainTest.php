@@ -29,7 +29,7 @@ class CustomDomainTest extends TestCase
         $this->actingAs($owner)->get(route('admin.custom-domain.index'))
             ->assertOk()
             ->assertSee('Domain Kustom')
-            ->assertSee('Panduan Setting Domain Kustom');
+            ->assertSee('Cara Menghubungkan Domain Kustom');
     }
 
     public function test_owner_can_register_domain_and_system_or_duplicate_domains_are_rejected(): void
