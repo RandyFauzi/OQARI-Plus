@@ -414,7 +414,7 @@
             if (table) {
                 const shopName = {{ Illuminate\Support\Js::from($shop->name) }};
                 document.getElementById('header-table-number').textContent = 'Meja ' + table + ', ' + shopName;
-                localStorage.setItem((window.SHOP_SLUG || 'default') + '_table_qr', table);
+                localStorage.setItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_table_qr', table);
                 document.getElementById('modal-table-selector').classList.add('hidden');
             }
         }

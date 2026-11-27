@@ -1,7 +1,7 @@
 // C:\laragon\www\Goodwill\js\store.js
 
 const CartStore = {
-    getKey: () => (window.SHOP_SLUG || 'default') + '_cart',
+    getKey: () => (window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_cart',
     
     get: () => {
         const data = localStorage.getItem(CartStore.getKey());

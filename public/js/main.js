@@ -990,7 +990,7 @@ function renderCartDetail() {
     document.getElementById('summary-section').classList.remove('hidden');
     
     // Logika QR Table
-    const detectedTable = localStorage.getItem((window.SHOP_SLUG || 'default') + '_table_qr');
+    const detectedTable = localStorage.getItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_table_qr');
     const badgeTable = document.getElementById('table-detected-badge');
     const manualInput = document.getElementById('manual-table-input');
     
@@ -1067,7 +1067,7 @@ async function applyPromoCode() {
 
     if (!code) {
         appliedVoucher = null;
-        localStorage.removeItem((window.SHOP_SLUG || 'default') + '_customer_promo');
+        localStorage.removeItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_customer_promo');
         if (msgEl) {
             msgEl.className = 'text-xs mt-1.5 text-gray-500';
             msgEl.innerText = 'Kode promo dihapus.';
@@ -1096,7 +1096,7 @@ async function applyPromoCode() {
         const data = await res.json();
         if (!res.ok || !data.success) {
             appliedVoucher = null;
-            localStorage.removeItem((window.SHOP_SLUG || 'default') + '_customer_promo');
+            localStorage.removeItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_customer_promo');
             if (msgEl) {
                 msgEl.className = 'text-xs mt-1.5 text-red-600 font-semibold';
                 msgEl.innerText = data.message || 'Kode promo tidak valid.';
@@ -1109,7 +1109,7 @@ async function applyPromoCode() {
                 name: data.voucher.name,
                 discount_amount: Number(data.discount_amount || 0)
             };
-            localStorage.setItem((window.SHOP_SLUG || 'default') + '_customer_promo', data.voucher.code);
+            localStorage.setItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_customer_promo', data.voucher.code);
             if (msgEl) {
                 msgEl.className = 'text-xs mt-1.5 text-emerald-600 font-bold';
                 msgEl.innerText = `✅ Diskon Rp ${Number(data.discount_amount).toLocaleString('id-ID')} berhasil diterapkan!`;
@@ -1137,7 +1137,7 @@ function openCustomerInfoModal() {
     if (CartStore.get().length === 0) return;
     
     // Auto-fill table from QR if exists
-    let qrTable = localStorage.getItem((window.SHOP_SLUG || 'default') + '_table_qr');
+    let qrTable = localStorage.getItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_table_qr');
     const tableInput = document.getElementById('customer-table');
     if (qrTable && tableInput) {
         tableInput.value = qrTable;
@@ -1147,7 +1147,7 @@ function openCustomerInfoModal() {
         tableInput.classList.remove('bg-white');
     }
 
-    const savedPromo = localStorage.getItem((window.SHOP_SLUG || 'default') + '_customer_promo');
+    const savedPromo = localStorage.getItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_customer_promo');
     const promoInput = document.getElementById('customer-promo');
     if (promoInput && savedPromo && !promoInput.value) {
         promoInput.value = savedPromo;
@@ -1212,7 +1212,7 @@ function reviewCheckout() {
     
     let table = '';
     if (!isTakeaway) {
-        table = localStorage.getItem((window.SHOP_SLUG || 'default') + '_table_qr');
+        table = localStorage.getItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_table_qr');
         if (!table) {
             table = document.getElementById('customer-table')?.value.trim();
         }
@@ -1238,16 +1238,16 @@ function reviewCheckout() {
     }
 
     localStorage.setItem((window.SHOP_SLUG || 'default') + '_customer_name', name);
-    localStorage.setItem((window.SHOP_SLUG || 'default') + '_customer_table', table);
+    localStorage.setItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_customer_table', table);
     localStorage.setItem((window.SHOP_SLUG || 'default') + '_customer_email', email);
     localStorage.setItem((window.SHOP_SLUG || 'default') + '_customer_phone', phone);
     localStorage.setItem((window.SHOP_SLUG || 'default') + '_fulfillment_type', fulfillmentType);
 
     const promo = document.getElementById('customer-promo')?.value.trim().toUpperCase() || '';
     if (promo) {
-        localStorage.setItem((window.SHOP_SLUG || 'default') + '_customer_promo', promo);
+        localStorage.setItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_customer_promo', promo);
     } else {
-        localStorage.removeItem((window.SHOP_SLUG || 'default') + '_customer_promo');
+        localStorage.removeItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_customer_promo');
         appliedVoucher = null;
     }
     
@@ -1267,17 +1267,17 @@ function submitQrisOrder() {
     const name = localStorage.getItem((window.SHOP_SLUG || 'default') + '_customer_name') || 'Guest';
     const email = localStorage.getItem((window.SHOP_SLUG || 'default') + '_customer_email') || '';
     const phone = localStorage.getItem((window.SHOP_SLUG || 'default') + '_customer_phone') || '';
-    const table = localStorage.getItem((window.SHOP_SLUG || 'default') + '_customer_table') || '';
+    const table = localStorage.getItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_customer_table') || '';
     const fulfillmentType = localStorage.getItem((window.SHOP_SLUG || 'default') + '_fulfillment_type') || 'DINE_IN';
-    const promo = localStorage.getItem((window.SHOP_SLUG || 'default') + '_customer_promo') || '';
+    const promo = localStorage.getItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_customer_promo') || '';
     const items = CartStore.get();
     const total = window.currentGrandTotal;
     
     // Create order using database.js engine
     DB.createOrder(table, name, email, phone, 'QRIS', items, total, fulfillmentType, promo)
         .then(data => {
-            localStorage.setItem((window.SHOP_SLUG || 'default') + '_last_order_type', fulfillmentType === 'TAKEAWAY' ? 'Take Away' : 'Dine In');
-            localStorage.setItem((window.SHOP_SLUG || 'default') + '_last_order_total', data.order.grand_total);
+            localStorage.setItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_last_order_type', fulfillmentType === 'TAKEAWAY' ? 'Take Away' : 'Dine In');
+            localStorage.setItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_last_order_total', data.order.grand_total);
             CartStore.clear(); 
             window.location.href = data.tracking_url || window.SHOP_TRACKING_URL;
         })
@@ -1290,8 +1290,8 @@ function submitQrisOrder() {
 
 function initTrackingPage() {
     if (!document.getElementById('track-type')) return;
-    document.getElementById('track-type').innerText = localStorage.getItem((window.SHOP_SLUG || 'default') + '_last_order_type') || 'Dine-in';
-    document.getElementById('track-total').innerText = formatRp(Number(localStorage.getItem((window.SHOP_SLUG || 'default') + '_last_order_total') || '0'));
+    document.getElementById('track-type').innerText = localStorage.getItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_last_order_type') || 'Dine-in';
+    document.getElementById('track-total').innerText = formatRp(Number(localStorage.getItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_last_order_total') || '0'));
     setTimeout(() => { const modal = document.getElementById('modal-rating'); if(modal) modal.classList.remove('hidden'); }, 3000);
 }
 
@@ -1335,7 +1335,7 @@ function closeRating() { document.getElementById('modal-rating').classList.add('
 
 function goBackHome(event) {
     if (event) event.preventDefault();
-    let qrTable = localStorage.getItem((window.SHOP_SLUG || 'default') + '_table_qr');
+    let qrTable = localStorage.getItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_table_qr');
     if (qrTable) {
         window.location.href = window.SHOP_HOME_URL + '?table=' + qrTable;
     } else {
@@ -1348,7 +1348,7 @@ function initApp() {
     // 1. Deteksi Meja dari URL (QR Code)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('table')) {
-        localStorage.setItem((window.SHOP_SLUG || 'default') + '_table_qr', urlParams.get('table'));
+        localStorage.setItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_table_qr', urlParams.get('table'));
     }
 
     const page = document.body ? document.body.dataset.page : null;

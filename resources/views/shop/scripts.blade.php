@@ -3,6 +3,7 @@
         window.SHOP_DATA = @json($menuItems ?? []);
         window.SHOP_SLUG = '{{ $shop->slug }}';
         window.SHOP_BRANCH_SLUG = @json(($shop->branches_enabled && ! empty($activeBranch)) ? $activeBranch->slug : null);
+        window.SHOP_STORAGE_PREFIX = (window.SHOP_SLUG || 'default') + (window.SHOP_BRANCH_SLUG ? '_' + window.SHOP_BRANCH_SLUG : '');
         window.SHOP_DISCOUNT_SETTINGS = @json($shop->discount_settings ?? []);
         @php
             $isCustomDomain = request()->attributes->has('custom_domain_shop');
@@ -156,7 +157,8 @@
                 return localStorage.getItem(tableName) ? JSON.parse(localStorage.getItem(tableName)) : [];
             },
             createOrder: function(table, name, email, phone, paymentMethod, items, total, fulfillmentType = 'DINE_IN', voucherCode = null) {
-                const orderKey = window.SHOP_SLUG + '_checkout_request';
+                const storagePrefix = window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default';
+                const orderKey = storagePrefix + '_checkout_request';
                 const requestId = sessionStorage.getItem(orderKey) || window.newRequestId();
                 sessionStorage.setItem(orderKey, requestId);
 
@@ -197,7 +199,7 @@
                     }
                     if (data.success && data.order) {
                         sessionStorage.removeItem(orderKey);
-                        localStorage.setItem(window.SHOP_SLUG + '_last_order', JSON.stringify(data.order));
+                        localStorage.setItem(storagePrefix + '_last_order', JSON.stringify(data.order));
                     }
                     return data;
                 })

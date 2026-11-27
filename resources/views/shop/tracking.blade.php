@@ -129,7 +129,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Check if there is an order number generated
-            const lastOrderStr = localStorage.getItem((window.SHOP_SLUG || 'default') + '_last_order');
+            const lastOrderStr = localStorage.getItem((window.SHOP_STORAGE_PREFIX || window.SHOP_SLUG || 'default') + '_last_order');
             if (lastOrderStr) {
                 try {
                     const order = JSON.parse(lastOrderStr);
