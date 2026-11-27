@@ -7,6 +7,7 @@ use App\Models\Shop;
 use App\Models\ShopDomain;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -116,7 +117,9 @@ class CustomDomainService
 
         $cnameRecords = $lookup($shopDomain->domain, DNS_CNAME);
         $cnameMatched = collect($cnameRecords)->contains(function (array $record) use ($expectedTarget): bool {
-            return strtolower(rtrim((string) ($record['target'] ?? ''), '.')) === $expectedTarget;
+            $target = strtolower(rtrim((string) ($record['target'] ?? ''), '.'));
+
+            return $target === $expectedTarget || str_ends_with($target, '.cdn.hstgr.net');
         });
 
         $aRecords = $cnameMatched ? [] : $lookup($shopDomain->domain, DNS_A);
@@ -133,6 +136,17 @@ class CustomDomainService
         });
 
         $pointingMatched = $cnameMatched || $aMatched;
+
+        // If behind Hostinger ALIAS/CDN where anycast IPs differ per hostname,
+        // verify whether the domain already reaches this Laravel app (/up).
+        if (! $pointingMatched && $dnsLookup === null && ! empty($aRecords)) {
+            try {
+                $probe = Http::withoutVerifying()->connectTimeout(3)->timeout(5)->get("https://{$shopDomain->domain}/up");
+                $pointingMatched = $probe->successful();
+            } catch (Throwable) {
+                $pointingMatched = false;
+            }
+        }
 
         $txtRecords = $lookup($shopDomain->txtRecordName(), DNS_TXT);
         $expectedTxt = $shopDomain->txtRecordValue();
