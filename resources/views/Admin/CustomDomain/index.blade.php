@@ -95,7 +95,13 @@
                         <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                             <div class="min-w-0 space-y-1">
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <p class="truncate text-[15px] font-bold text-[#111827]">{{ $item->domain }}</p>
+                                    @if($item->isActive())
+                                        <a href="https://{{ $item->domain }}" target="_blank" rel="noopener" class="truncate text-[15px] font-bold text-[#111827] hover:text-[#df5826] transition">
+                                            {{ $item->domain }} <i class="fas fa-arrow-up-right-from-square text-[11px] ml-0.5 text-[#df5826]"></i>
+                                        </a>
+                                    @else
+                                        <p class="truncate text-[15px] font-bold text-[#111827]">{{ $item->domain }}</p>
+                                    @endif
                                     @if($item->isActive())
                                         <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
                                             <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>

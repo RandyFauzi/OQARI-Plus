@@ -142,7 +142,13 @@
                                             @endif
                                         </div>
                                         <p class="mt-0.5 truncate text-xs text-[#53565a]">
-                                            {{ $activeCustomDomain ? 'https://' . $activeCustomDomain->domain : 'Ingin pakai domain sendiri (misal order.namatoko.com)?' }}
+                                            @if($activeCustomDomain)
+                                                <a href="https://{{ $activeCustomDomain->domain }}" target="_blank" rel="noopener" class="font-semibold text-[#df5826] hover:underline">
+                                                    https://{{ $activeCustomDomain->domain }} <i class="fas fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
+                                                </a>
+                                            @else
+                                                Ingin pakai domain sendiri (misal order.namatoko.com)?
+                                            @endif
                                         </p>
                                     </div>
                                 </div>

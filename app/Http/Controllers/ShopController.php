@@ -99,7 +99,7 @@ class ShopController extends Controller
         $shop = $request->attributes->get('custom_domain_shop');
         abort_unless($shop, 404);
 
-        return $this->show($request, $shop->slug);
+        return $this->show($request, $shop->slug, '');
     }
 
     public function cartCustomDomain(Request $request)
