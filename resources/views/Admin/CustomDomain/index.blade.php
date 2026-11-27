@@ -18,24 +18,18 @@
     }
 }">
     {{-- Page Header --}}
-    <header class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <header class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-            <h1 class="text-[25px] font-semibold leading-tight tracking-tight text-[#111827]">Domain Kustom</h1>
-            <p class="mt-0.5 text-[13px] text-[#53565a]">
-                Gunakan domain atau subdomain bisnis Anda sendiri untuk halaman menu &amp; pemesanan QR pelanggan.
+            <h1 class="text-[24px] font-semibold leading-tight tracking-tight text-[#111827]">Domain Kustom</h1>
+            <p class="mt-1 text-[13px] text-[#53565a]">
+                Pakai nama website toko Anda sendiri (contoh: <span class="font-medium text-[#111827]">order.tokoanda.com</span>) untuk dashboard &amp; menu pelanggan.
             </p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-            <span class="inline-flex items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-3 py-1.5 text-[11px] font-semibold text-[#df5826]">
-                <i class="fas fa-crown text-[10px]" aria-hidden="true"></i>
-                <span>Owner Only</span>
-            </span>
-            <span class="inline-flex items-center gap-1.5 rounded-full border border-[#e9ebf0] bg-white px-3 py-1.5 text-[11px] font-medium text-[#53565a]">
-                <span class="h-1.5 w-1.5 rounded-full {{ $cloudflareEnabled && config('custom_domains.approval_mode') === 'auto' ? 'bg-emerald-500' : 'bg-sky-500' }}" aria-hidden="true"></span>
-                <span>{{ $cloudflareEnabled && config('custom_domains.approval_mode') === 'auto' ? 'Cloudflare for SaaS SSL' : 'Verifikasi & Persetujuan Admin' }}</span>
-            </span>
-        </div>
+        <span class="inline-flex w-fit items-center gap-1.5 rounded-full border border-[#ffdec9] bg-[#fff6f0] px-3 py-1.5 text-[11px] font-semibold text-[#df5826]">
+            <i class="fas fa-crown text-[10px]" aria-hidden="true"></i>
+            <span>Khusus Owner</span>
+        </span>
     </header>
 
     <div class="grid gap-5 lg:grid-cols-12">
@@ -46,27 +40,35 @@
                     <i class="fas fa-globe text-[15px]" aria-hidden="true"></i>
                 </span>
                 <div>
-                    <h2 id="custom-domain-add-heading" class="text-[16px] font-bold text-[#111827]">Tambah Domain Bisnis</h2>
-                    <p class="mt-0.5 text-[12px] text-[#7f837e]">Disarankan memakai subdomain seperti <code class="rounded bg-[#f8f9fa] px-1 py-0.5 font-mono text-[11px]">order.tokoanda.com</code>.</p>
+                    <h2 id="custom-domain-add-heading" class="text-[16px] font-bold text-[#111827]">Pasang Domain Baru</h2>
+                    <p class="mt-0.5 text-[12px] text-[#7f837e]">Cukup masukkan alamat domain atau subdomain yang Anda punya.</p>
                 </div>
             </div>
 
             <form method="POST" action="{{ route('admin.custom-domain.store') }}" class="mt-5 space-y-4">
                 @csrf
                 <div>
-                    <label for="custom-domain-input" class="block text-[12px] font-semibold text-[#111827]">Nama Domain / Subdomain</label>
+                    <label for="custom-domain-input" class="block text-[12px] font-semibold text-[#111827]">Alamat Domain Anda</label>
                     <input id="custom-domain-input" name="domain" type="text" required maxlength="253"
                            value="{{ old('domain') }}" placeholder="Contoh: order.burgerkat.com"
                            class="mt-1.5 block h-[42px] w-full rounded-[10px] border border-[#e9ebf0] bg-white px-3.5 text-[13px] text-[#111827] placeholder-[#7f837e] transition focus:border-[#df5826] focus:outline-none focus:ring-2 focus:ring-[#df5826]/15">
                     <p class="mt-1.5 text-[11px] text-[#7f837e]">
-                        Masukkan tanpa <code class="font-mono">https://</code> atau garis miring di akhir.
+                        Tulis langsung nama domainnya saja (tanpa <code class="font-mono">https://</code>).
                     </p>
                 </div>
 
-                <div class="rounded-[12px] border border-[#f1f3f5] bg-[#f8f9fa] p-3.5 text-[12px] text-[#53565a] space-y-1.5">
-                    <p class="font-semibold text-[#111827]">URL Default Toko Anda:</p>
-                    <p class="break-all font-mono text-[11.5px] text-[#df5826]">{{ route('shop.menu', ['slug' => $shop->slug]) }}</p>
-                    <p class="text-[11px] text-[#7f837e]">URL default tetap aktif sebagai cadangan meskipun domain kustom dipasang.</p>
+                @php
+                    $defaultShopUrl = rtrim((string) config('app.url'), '/').'/'.$shop->slug;
+                @endphp
+                <div class="rounded-[12px] border border-[#f1f3f5] bg-[#f8f9fa] p-3.5 text-[12px] text-[#53565a] space-y-1">
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="font-semibold text-[#111827]">Link Cadangan Toko</p>
+                        <button type="button" @click="copyText('default-url', '{{ $defaultShopUrl }}')" class="text-[11px] font-semibold text-[#df5826] hover:underline cursor-pointer">
+                            <span x-text="copiedKey === 'default-url' ? 'Tersalin!' : 'Salin'">Salin</span>
+                        </button>
+                    </div>
+                    <p class="break-all font-mono text-[11.5px] text-[#df5826]">{{ $defaultShopUrl }}</p>
+                    <p class="text-[11px] text-[#7f837e]">Link ini tetap aktif sebagai cadangan kapan pun dibutuhkan.</p>
                 </div>
 
                 <button type="submit"
@@ -77,76 +79,72 @@
             </form>
         </section>
 
-        {{-- Right: Domain List & DNS Setup --}}
+        {{-- Right: Domain List & Simple Setup --}}
         <section class="rounded-[14px] border border-[#e9ebf0] bg-white shadow-[0px_2px_4px_rgba(38,39,35,0.03)] lg:col-span-7 overflow-hidden" aria-labelledby="custom-domain-list-heading">
-            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#e9ebf0] px-5 py-4">
+            <div class="flex items-center justify-between gap-2 border-b border-[#e9ebf0] px-5 py-4">
                 <div class="flex items-center gap-2.5">
-                    <h2 id="custom-domain-list-heading" class="text-[16px] font-bold text-[#111827]">Domain Terdaftar</h2>
+                    <h2 id="custom-domain-list-heading" class="text-[16px] font-bold text-[#111827]">Domain Anda</h2>
                     <span class="rounded-full border border-[#ffdec9] bg-[#fff6f0] px-2.5 py-0.5 text-[11px] font-bold text-[#df5826]">
                         {{ $domains->count() }}
                     </span>
                 </div>
-                <span class="text-[12px] text-[#7f837e]">Target CNAME: <code class="font-mono text-[#111827]">{{ $cnameTarget }}</code></span>
             </div>
 
             <div class="divide-y divide-[#f1f3f5]">
                 @forelse($domains as $item)
-                    <div class="p-5 space-y-4">
+                    <div class="p-5 space-y-4" x-data="{ showDns: {{ $item->isActive() || $item->isPendingApproval() ? 'false' : 'true' }} }">
                         <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                             <div class="min-w-0 space-y-1">
                                 <div class="flex flex-wrap items-center gap-2">
                                     @if($item->isActive())
-                                        <a href="https://{{ $item->domain }}" target="_blank" rel="noopener" class="truncate text-[15px] font-bold text-[#111827] hover:text-[#df5826] transition">
+                                        <a href="https://{{ $item->domain }}" target="_blank" rel="noopener" class="truncate text-[16px] font-bold text-[#111827] hover:text-[#df5826] transition">
                                             {{ $item->domain }} <i class="fas fa-arrow-up-right-from-square text-[11px] ml-0.5 text-[#df5826]"></i>
                                         </a>
-                                    @else
-                                        <p class="truncate text-[15px] font-bold text-[#111827]">{{ $item->domain }}</p>
-                                    @endif
-                                    @if($item->isActive())
-                                        <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                        <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700">
                                             <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                            Aktif &amp; Terhubung
+                                            Aktif &amp; Siap Dipakai
                                         </span>
                                     @elseif($item->isPendingApproval())
-                                        <span class="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-[10px] font-semibold text-sky-700">
+                                        <p class="truncate text-[16px] font-bold text-[#111827]">{{ $item->domain }}</p>
+                                        <span class="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-[11px] font-semibold text-sky-700">
                                             <span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
-                                            Menunggu Persetujuan Admin
+                                            Sedang Diaktifkan Admin
                                         </span>
                                     @elseif($item->status === \App\Models\ShopDomain::STATUS_FAILED)
-                                        <span class="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[10px] font-semibold text-red-700">
-                                            Verifikasi Gagal
+                                        <p class="truncate text-[16px] font-bold text-[#111827]">{{ $item->domain }}</p>
+                                        <span class="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[11px] font-semibold text-red-700">
+                                            Belum Terhubung
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold text-amber-700">
-                                            Menunggu DNS
+                                        <p class="truncate text-[16px] font-bold text-[#111827]">{{ $item->domain }}</p>
+                                        <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
+                                            Perlu Pengaturan DNS
                                         </span>
                                     @endif
                                 </div>
-                                @if($item->verified_at)
-                                    <p class="text-[11px] text-[#7f837e]">
-                                        Terverifikasi {{ $item->verified_at->diffForHumans() }} · SSL: {{ strtoupper($item->ssl_status) }}
-                                        · <a href="https://{{ $item->domain }}/admin/login" target="_blank" rel="noopener" class="font-semibold text-[#df5826] hover:underline">Login Dashboard ↗</a>
-                                    </p>
-                                @elseif($item->isPendingApproval())
-                                    <p class="text-[12px] font-medium text-sky-700">DNS sudah terverifikasi! Pengajuan sedang ditinjau Admin OQARI Plus untuk diaktifkan di server.</p>
-                                @elseif($item->last_error)
-                                    <p class="text-[12px] font-medium text-red-600">{{ $item->last_error }}</p>
+
+                                @if($item->isPendingApproval())
+                                    <p class="text-[12px] text-sky-700">Pengaturan DNS sudah benar! Tim kami sedang mengaktifkan domain Anda.</p>
+                                @elseif($item->last_error && !$item->isActive())
+                                    <p class="text-[12px] text-red-600">DNS belum terdeteksi. Pastikan 2 data di bawah sudah dimasukkan dengan benar, lalu klik <strong>Cek Koneksi</strong>.</p>
                                 @endif
                             </div>
 
                             <div class="flex flex-wrap items-center gap-2 shrink-0">
-                                <form method="POST" action="{{ route('admin.custom-domain.verify', $item->id) }}">
-                                    @csrf
-                                    <button type="submit" class="inline-flex h-[36px] cursor-pointer items-center gap-1.5 rounded-[10px] border border-[#ffd2b8] bg-[#fff6f0] px-3 text-[12px] font-semibold text-[#df5826] transition hover:bg-[#ffe9db]">
-                                        <i class="fas fa-rotate text-[11px]" aria-hidden="true"></i>
-                                        <span>Verifikasi DNS</span>
-                                    </button>
-                                </form>
+                                @if(!$item->isActive())
+                                    <form method="POST" action="{{ route('admin.custom-domain.verify', $item->id) }}">
+                                        @csrf
+                                        <button type="submit" class="inline-flex h-[36px] cursor-pointer items-center gap-1.5 rounded-[10px] bg-[#df5826] px-3.5 text-[12px] font-semibold text-white shadow-xs transition hover:bg-[#c94d00]">
+                                            <i class="fas fa-rotate text-[11px]" aria-hidden="true"></i>
+                                            <span>Cek Koneksi</span>
+                                        </button>
+                                    </form>
+                                @endif
                                 <form method="POST" action="{{ route('admin.custom-domain.destroy', $item->id) }}"
-                                      @submit="if (!confirm('Hapus domain {{ $item->domain }}? Pelanggan tidak lagi dapat mengakses toko melalui domain ini.')) $event.preventDefault()">
+                                      @submit="if (!confirm('Hapus domain {{ $item->domain }}?')) $event.preventDefault()">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="inline-flex h-[36px] cursor-pointer items-center gap-1.5 rounded-[10px] border border-red-200 bg-white px-3 text-[12px] font-semibold text-red-600 transition hover:bg-red-50">
+                                    <button type="submit" class="inline-flex h-[36px] cursor-pointer items-center gap-1.5 rounded-[10px] border border-[#e9ebf0] bg-white px-3 text-[12px] font-semibold text-[#53565a] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
                                         <i class="fas fa-trash-can text-[11px]" aria-hidden="true"></i>
                                         <span>Hapus</span>
                                     </button>
@@ -154,35 +152,95 @@
                             </div>
                         </div>
 
-                        {{-- DNS Setup Instructions --}}
-                        <div class="rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4 space-y-3">
-                            <p class="text-[11px] font-bold uppercase tracking-wider text-[#53565a]">Pengaturan DNS di Provider Domain Anda (Cloudflare / Niagahoster / GoDaddy / dll.)</p>
-
+                        {{-- Quick Links when Active --}}
+                        @if($item->isActive())
                             <div class="grid gap-2.5 sm:grid-cols-2">
-                                <div class="rounded-[10px] border border-[#e9ebf0] bg-white p-3 space-y-1.5">
-                                    <div class="flex items-center justify-between">
-                                        <span class="rounded bg-[#fff6f0] px-2 py-0.5 font-mono text-[10px] font-bold text-[#df5826]">1. CNAME</span>
-                                        <button type="button" @click="copyText('cname-{{ $item->id }}', '{{ $cnameTarget }}')" class="text-[11px] font-semibold text-[#df5826] hover:underline cursor-pointer">
-                                            <span x-text="copiedKey === 'cname-{{ $item->id }}' ? 'Tersalin!' : 'Salin Target'">Salin Target</span>
-                                        </button>
+                                <div class="flex items-center justify-between gap-2 rounded-[10px] border border-[#e9ebf0] bg-[#f8f9fa] px-3.5 py-2.5">
+                                    <div class="min-w-0">
+                                        <p class="text-[11px] font-semibold text-[#7f837e]">Dashboard &amp; Kasir</p>
+                                        <a href="https://{{ $item->domain }}" target="_blank" rel="noopener" class="block truncate text-[12.5px] font-semibold text-[#111827] hover:text-[#df5826]">
+                                            https://{{ $item->domain }}
+                                        </a>
                                     </div>
-                                    <p class="text-[11px] text-[#7f837e]">Host / Name:</p>
-                                    <p class="break-all font-mono text-[11.5px] font-semibold text-[#111827]">{{ $item->domain }}</p>
-                                    <p class="text-[11px] text-[#7f837e]">Target / Value:</p>
-                                    <p class="break-all font-mono text-[11.5px] font-semibold text-[#111827]">{{ $cnameTarget }}</p>
+                                    <button type="button" @click="copyText('dash-{{ $item->id }}', 'https://{{ $item->domain }}')" class="shrink-0 rounded-lg border border-[#e9ebf0] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#53565a] hover:text-[#df5826] cursor-pointer">
+                                        <span x-text="copiedKey === 'dash-{{ $item->id }}' ? 'Tersalin!' : 'Salin'">Salin</span>
+                                    </button>
                                 </div>
 
-                                <div class="rounded-[10px] border border-[#e9ebf0] bg-white p-3 space-y-1.5">
-                                    <div class="flex items-center justify-between">
-                                        <span class="rounded bg-sky-50 px-2 py-0.5 font-mono text-[10px] font-bold text-sky-700">2. TXT (Verifikasi)</span>
-                                        <button type="button" @click="copyText('txt-{{ $item->id }}', '{{ $item->txtRecordValue() }}')" class="text-[11px] font-semibold text-[#df5826] hover:underline cursor-pointer">
-                                            <span x-text="copiedKey === 'txt-{{ $item->id }}' ? 'Tersalin!' : 'Salin Token'">Salin Token</span>
+                                <div class="flex items-center justify-between gap-2 rounded-[10px] border border-[#e9ebf0] bg-[#f8f9fa] px-3.5 py-2.5">
+                                    <div class="min-w-0">
+                                        <p class="text-[11px] font-semibold text-[#7f837e]">Menu Pelanggan (QR)</p>
+                                        <a href="https://{{ $item->domain }}/menu" target="_blank" rel="noopener" class="block truncate text-[12.5px] font-semibold text-[#111827] hover:text-[#df5826]">
+                                            https://{{ $item->domain }}/menu
+                                        </a>
+                                    </div>
+                                    <button type="button" @click="copyText('menu-{{ $item->id }}', 'https://{{ $item->domain }}/menu')" class="shrink-0 rounded-lg border border-[#e9ebf0] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#53565a] hover:text-[#df5826] cursor-pointer">
+                                        <span x-text="copiedKey === 'menu-{{ $item->id }}' ? 'Tersalin!' : 'Salin'">Salin</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between text-[11px] text-[#7f837e]">
+                                <button type="button" @click="showDns = !showDns" class="font-medium text-[#53565a] hover:text-[#df5826] cursor-pointer">
+                                    <span x-text="showDns ? 'Sembunyikan pengaturan DNS ▲' : 'Lihat pengaturan DNS ▼'">Lihat pengaturan DNS ▼</span>
+                                </button>
+                                <span>Terverifikasi {{ $item->verified_at?->diffForHumans() }}</span>
+                            </div>
+                        @elseif($item->isPendingApproval())
+                            <button type="button" @click="showDns = !showDns" class="text-[11.5px] font-medium text-[#53565a] hover:text-[#df5826] cursor-pointer">
+                                <span x-text="showDns ? 'Sembunyikan pengaturan DNS ▲' : 'Lihat pengaturan DNS ▼'">Lihat pengaturan DNS ▼</span>
+                            </button>
+                        @endif
+
+                        {{-- DNS Setup Instructions (Shown automatically only when needed, collapsible when active) --}}
+                        <div x-show="showDns" x-cloak class="rounded-[12px] border border-[#e9ebf0] bg-[#f8f9fa] p-4 space-y-3">
+                            <p class="text-[12px] font-semibold text-[#111827]">
+                                Buka menu <strong>DNS</strong> di tempat Anda beli domain (Niagahoster, Rumahweb, Cloudflare, dll.), lalu tambahkan 2 data ini:
+                            </p>
+
+                            <div class="grid gap-2.5 sm:grid-cols-2">
+                                <div class="rounded-[10px] border border-[#e9ebf0] bg-white p-3 space-y-2">
+                                    <span class="inline-block rounded bg-[#fff6f0] px-2 py-0.5 text-[11px] font-bold text-[#df5826]">Data 1 · Tipe CNAME</span>
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="min-w-0">
+                                            <p class="text-[11px] text-[#7f837e]">Nama / Host:</p>
+                                            <p class="break-all font-mono text-[11.5px] font-semibold text-[#111827]">{{ $item->domain }}</p>
+                                        </div>
+                                        <button type="button" @click="copyText('cname-host-{{ $item->id }}', '{{ $item->domain }}')" class="shrink-0 text-[11px] font-semibold text-[#df5826] hover:underline cursor-pointer">
+                                            <span x-text="copiedKey === 'cname-host-{{ $item->id }}' ? 'Tersalin!' : 'Salin'">Salin</span>
                                         </button>
                                     </div>
-                                    <p class="text-[11px] text-[#7f837e]">Host / Name:</p>
-                                    <p class="break-all font-mono text-[11.5px] font-semibold text-[#111827]">{{ $item->txtRecordName() }}</p>
-                                    <p class="text-[11px] text-[#7f837e]">Value:</p>
-                                    <p class="break-all font-mono text-[11.5px] font-semibold text-[#111827]">{{ $item->txtRecordValue() }}</p>
+                                    <div class="flex items-center justify-between gap-2 border-t border-[#f1f3f5] pt-1.5">
+                                        <div class="min-w-0">
+                                            <p class="text-[11px] text-[#7f837e]">Arahkan ke (Target):</p>
+                                            <p class="break-all font-mono text-[11.5px] font-semibold text-[#111827]">{{ $cnameTarget }}</p>
+                                        </div>
+                                        <button type="button" @click="copyText('cname-{{ $item->id }}', '{{ $cnameTarget }}')" class="shrink-0 text-[11px] font-semibold text-[#df5826] hover:underline cursor-pointer">
+                                            <span x-text="copiedKey === 'cname-{{ $item->id }}' ? 'Tersalin!' : 'Salin'">Salin</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="rounded-[10px] border border-[#e9ebf0] bg-white p-3 space-y-2">
+                                    <span class="inline-block rounded bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-700">Data 2 · Tipe TXT</span>
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="min-w-0">
+                                            <p class="text-[11px] text-[#7f837e]">Nama / Host:</p>
+                                            <p class="break-all font-mono text-[11.5px] font-semibold text-[#111827]">{{ $item->txtRecordName() }}</p>
+                                        </div>
+                                        <button type="button" @click="copyText('txt-host-{{ $item->id }}', '{{ $item->txtRecordName() }}')" class="shrink-0 text-[11px] font-semibold text-[#df5826] hover:underline cursor-pointer">
+                                            <span x-text="copiedKey === 'txt-host-{{ $item->id }}' ? 'Tersalin!' : 'Salin'">Salin</span>
+                                        </button>
+                                    </div>
+                                    <div class="flex items-center justify-between gap-2 border-t border-[#f1f3f5] pt-1.5">
+                                        <div class="min-w-0">
+                                            <p class="text-[11px] text-[#7f837e]">Isi / Value:</p>
+                                            <p class="break-all font-mono text-[11.5px] font-semibold text-[#111827]">{{ $item->txtRecordValue() }}</p>
+                                        </div>
+                                        <button type="button" @click="copyText('txt-{{ $item->id }}', '{{ $item->txtRecordValue() }}')" class="shrink-0 text-[11px] font-semibold text-[#df5826] hover:underline cursor-pointer">
+                                            <span x-text="copiedKey === 'txt-{{ $item->id }}' ? 'Tersalin!' : 'Salin'">Salin</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -193,7 +251,7 @@
                             <i class="fas fa-globe text-[18px]" aria-hidden="true"></i>
                         </div>
                         <p class="text-[14px] font-semibold text-[#111827]">Belum ada domain kustom</p>
-                        <p class="mt-1 text-[12px] text-[#7f837e]">Tambahkan domain bisnis Anda di sebelah kiri untuk mulai menghubungkan toko.</p>
+                        <p class="mt-1 text-[12px] text-[#7f837e]">Masukkan nama domain Anda di sebelah kiri untuk mulai menghubungkan toko.</p>
                     </div>
                 @endforelse
             </div>
@@ -206,24 +264,24 @@
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-[#fff6f0] text-[#df5826]">
                 <i class="fas fa-book-open text-[13px]" aria-hidden="true"></i>
             </span>
-            <h2 id="custom-domain-guide-heading" class="text-[14px] font-bold text-[#111827]">Cara Menghubungkan Domain Kustom (3 Langkah)</h2>
+            <h2 id="custom-domain-guide-heading" class="text-[14px] font-bold text-[#111827]">Cara Menghubungkan Domain Kustom (3 Langkah Mudah)</h2>
         </div>
 
         <div class="grid gap-3 p-5 md:grid-cols-3">
             <div class="rounded-[12px] border border-[#f1f3f5] bg-[#f8f9fa] p-4 space-y-1.5">
                 <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff6f0] text-[11px] font-bold text-[#df5826] ring-1 ring-[#ffdec9]">1</span>
-                <p class="text-[13px] font-bold text-[#111827]">Daftarkan Domain</p>
-                <p class="text-[12px] leading-relaxed text-[#53565a]">Masukkan subdomain bisnis Anda (misal <code class="rounded bg-white px-1 font-mono text-[11px]">order.namatoko.com</code>) lalu klik <strong>Daftarkan Domain</strong>.</p>
+                <p class="text-[13px] font-bold text-[#111827]">Tulis Nama Domain</p>
+                <p class="text-[12px] leading-relaxed text-[#53565a]">Ketik alamat domain Anda (misalnya <span class="font-medium text-[#111827]">order.tokoanda.com</span>) lalu tekan <strong>Daftarkan Domain</strong>.</p>
             </div>
             <div class="rounded-[12px] border border-[#f1f3f5] bg-[#f8f9fa] p-4 space-y-1.5">
                 <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff6f0] text-[11px] font-bold text-[#df5826] ring-1 ring-[#ffdec9]">2</span>
-                <p class="text-[13px] font-bold text-[#111827]">Pasang CNAME &amp; TXT</p>
-                <p class="text-[12px] leading-relaxed text-[#53565a]">Salin record <strong>CNAME</strong> (mengarah ke <code class="rounded bg-white px-1 font-mono text-[11px]">{{ $cnameTarget }}</code>) dan <strong>TXT</strong> ke pengaturan DNS domain Anda.</p>
+                <p class="text-[13px] font-bold text-[#111827]">Salin 2 Data ke Provider Domain</p>
+                <p class="text-[12px] leading-relaxed text-[#53565a]">Salin <strong>Data 1 (CNAME)</strong> dan <strong>Data 2 (TXT)</strong> yang muncul ke pengaturan DNS tempat Anda membeli domain.</p>
             </div>
             <div class="rounded-[12px] border border-[#f1f3f5] bg-[#f8f9fa] p-4 space-y-1.5">
                 <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#fff6f0] text-[11px] font-bold text-[#df5826] ring-1 ring-[#ffdec9]">3</span>
-                <p class="text-[13px] font-bold text-[#111827]">Verifikasi &amp; Aktif</p>
-                <p class="text-[12px] leading-relaxed text-[#53565a]">Tunggu 1–10 menit lalu klik <strong>Verifikasi DNS</strong>. Admin OQARI Plus akan mengaktifkan domain Anda segera setelah DNS cocok.</p>
+                <p class="text-[13px] font-bold text-[#111827]">Klik Cek Koneksi</p>
+                <p class="text-[12px] leading-relaxed text-[#53565a]">Tunggu beberapa menit, lalu klik <strong>Cek Koneksi</strong>. Setelah disetujui admin, domain langsung aktif otomatis.</p>
             </div>
         </div>
     </section>
