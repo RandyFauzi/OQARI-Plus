@@ -199,6 +199,15 @@ class CustomDomainTest extends TestCase
             'is_active' => true,
         ]);
 
+        Branch::create([
+            'shop_id' => $shop->id,
+            'name' => 'Bandung',
+            'slug' => 'bandung',
+            'is_active' => true,
+        ]);
+
+        $shop->forceFill(['branches_enabled' => true])->save();
+
         // Custom domain root / redirects guest to login, owner to dashboard, and /menu renders storefront
         $this->get('http://order.burgerkat.com/')
             ->assertRedirect('http://order.burgerkat.com/admin/login');
@@ -209,7 +218,9 @@ class CustomDomainTest extends TestCase
 
         $this->get('http://order.burgerkat.com/menu')
             ->assertOk()
-            ->assertSee('Smash Burger Custom');
+            ->assertSee('Smash Burger Custom')
+            ->assertSee('Pilih Outlet')
+            ->assertSee('Bandung');
 
         $this->get('http://order.burgerkat.com/menu/'.$branch->slug)
             ->assertOk()

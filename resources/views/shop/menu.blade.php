@@ -131,14 +131,23 @@
     <!-- Header APP (Logo + Search Bar) - Sticky -->
     <div id="sticky-header" class="sticky top-0 z-40 bg-white/95 backdrop-blur-md transition-shadow duration-300">
         <div class="pt-4 pb-2 px-4">
-            <div class="flex items-center justify-between px-1 pb-2">
-                <div class="flex items-center gap-2">
-                    <img src="{{ $shop->logo_url ? $shop->logo_url : asset('logo-oqari.webp') }}" alt="{{ $shop->name }} Logo" class="h-10 w-10 object-contain drop-shadow-sm rounded-lg">
-                    <div class="flex flex-col">
-                        <span class="font-extrabold text-[15px] leading-tight tracking-tight text-primary uppercase" style="font-family: {!! $titleFontFamily !!};">{{ $shop->name }}</span>
-                        <span class="text-[8px] font-bold text-gray-500 tracking-[0.2em] mt-0.5 uppercase">{{ $shop->slogan ?? 'COFFEE & EATERY' }}</span>
+            <div class="flex items-center justify-between gap-2 px-1 pb-2">
+                <div class="flex items-center gap-2 min-w-0">
+                    <img src="{{ $shop->logo_url ? $shop->logo_url : asset('logo-oqari.webp') }}" alt="{{ $shop->name }} Logo" class="h-10 w-10 shrink-0 object-contain drop-shadow-sm rounded-lg">
+                    <div class="flex flex-col min-w-0">
+                        <span class="truncate font-extrabold text-[15px] leading-tight tracking-tight text-primary uppercase" style="font-family: {!! $titleFontFamily !!};">{{ $shop->name }}</span>
+                        <span class="truncate text-[8px] font-bold text-gray-500 tracking-[0.2em] mt-0.5 uppercase">{{ $shop->slogan ?? 'COFFEE & EATERY' }}</span>
                     </div>
                 </div>
+                @if($shop->branches_enabled && ($activeBranches ?? collect())->count() > 1 && !empty($activeBranch))
+                    <button type="button"
+                            onclick="document.getElementById('modal-branch-selector').classList.remove('hidden')"
+                            class="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-gray-800 shadow-xs hover:border-primary/40 transition max-w-[45%]">
+                        <i class="fas fa-store text-primary text-[10px] shrink-0"></i>
+                        <span class="truncate">{{ $activeBranch->name }}</span>
+                        <i class="fas fa-chevron-down text-[9px] text-gray-400 shrink-0"></i>
+                    </button>
+                @endif
             </div>
 
             <!-- Location & Search Bar -->
@@ -248,6 +257,54 @@
     </div>
 
     <!-- ITEM DETAIL MODAL (BOTTOM SHEET / CENTER MODAL) -->
+    @if($shop->branches_enabled && ($activeBranches ?? collect())->count() > 1 && !empty($activeBranch))
+        @php
+            $isCustomDomainForBranchModal = request()->attributes->has('custom_domain_shop');
+        @endphp
+        <div id="modal-branch-selector" class="fixed inset-0 max-w-[420px] mx-auto z-[70] hidden flex flex-col justify-end p-0">
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="document.getElementById('modal-branch-selector').classList.add('hidden')"></div>
+            <div class="relative bg-white w-full rounded-t-3xl p-5 pb-7 shadow-2xl space-y-3 max-h-[80vh] overflow-y-auto">
+                <div class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-2"></div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">Pilih Outlet</h3>
+                        <p class="text-xs text-gray-500">Pastikan outlet sesuai lokasi Anda sebelum memesan.</p>
+                    </div>
+                    <button type="button" onclick="document.getElementById('modal-branch-selector').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+                <div class="space-y-2 pt-1">
+                    @foreach($activeBranches as $branchOption)
+                        @php
+                            $branchOptionUrl = $isCustomDomainForBranchModal
+                                ? route('custom-domain.branch.menu', ['branchSlug' => $branchOption->slug])
+                                : route('shop.branch.menu', ['slug' => $shop->slug, 'branchSlug' => $branchOption->slug]);
+                            $isSelectedBranch = (int) $branchOption->id === (int) $activeBranch->id;
+                        @endphp
+                        <a href="{{ $branchOptionUrl }}"
+                           class="flex items-center justify-between gap-3 rounded-2xl border p-3.5 transition {{ $isSelectedBranch ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-primary/40 hover:bg-gray-50' }}">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 {{ $isSelectedBranch ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500' }}">
+                                    <i class="fas fa-store text-sm"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-bold text-gray-900 truncate">{{ $branchOption->name }}</p>
+                                    <p class="text-xs text-gray-500 truncate">{{ $branchOption->address ?: 'Outlet aktif' }}</p>
+                                </div>
+                            </div>
+                            @if($isSelectedBranch)
+                                <span class="shrink-0 rounded-full bg-primary text-white text-[10px] font-bold px-2.5 py-0.5">Dipilih</span>
+                            @else
+                                <i class="fas fa-chevron-right text-xs text-gray-400 shrink-0"></i>
+                            @endif
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div id="modal-item-detail" class="fixed inset-0 max-w-[420px] mx-auto z-50 hidden flex flex-col justify-end p-0">
         <div class="absolute inset-0 modal-overlay bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeItemDetail()"></div>
         

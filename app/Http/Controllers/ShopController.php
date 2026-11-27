@@ -242,13 +242,19 @@ class ShopController extends Controller
         }
 
         $activeBranch = null;
+        $activeBranches = collect();
         if ($shop->branches_enabled) {
+            $activeBranches = $shop->branches()
+                ->where('is_active', true)
+                ->orderByDesc('is_primary')
+                ->orderBy('name')
+                ->get();
             $activeBranch = $this->resolveBranchContext($request, $shop, $branchSlug, $tableModel);
             $shop = app(BranchStorefrontResolver::class)->apply($shop, $activeBranch);
             $menuItems = app(BranchMenuResolver::class)->forCustomerMenu($menuItems, $activeBranch);
         }
 
-        return view('shop.menu', compact('shop', 'menuItems', 'table', 'categories', 'activeBranch'));
+        return view('shop.menu', compact('shop', 'menuItems', 'table', 'categories', 'activeBranch', 'activeBranches'));
     }
 
     public function cartBranch(Request $request, string $slug, string $branchSlug)
