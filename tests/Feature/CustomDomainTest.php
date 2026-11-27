@@ -187,10 +187,26 @@ class CustomDomainTest extends TestCase
         $this->assertSame('cf-host-999', $verified->cloudflare_hostname_id);
         $this->assertSame('https://order.burgerkat.com', $shop->storefrontBaseUrl());
 
-        // Custom domain renders shop storefront at root /
+        // Custom domain renders shop storefront at root / and /menu
         $this->get('http://order.burgerkat.com/')
             ->assertOk()
             ->assertSee('Smash Burger Custom');
+
+        $this->get('http://order.burgerkat.com/menu')
+            ->assertOk()
+            ->assertSee('Smash Burger Custom');
+
+        // Shop's own owner can access admin dashboard on custom domain
+        $this->actingAs($owner)
+            ->get('http://order.burgerkat.com/admin/custom-domain')
+            ->assertOk();
+
+        // Another shop's owner is isolated and blocked on this custom domain
+        $otherShop = Shop::factory()->create();
+        $otherOwner = User::factory()->create(['shop_id' => $otherShop->id, 'role' => 'owner']);
+        $this->actingAs($otherOwner)
+            ->get('http://order.burgerkat.com/admin/custom-domain')
+            ->assertForbidden();
 
         // Superadmin routes are blocked on custom domain
         $this->get('http://order.burgerkat.com/superadmin/dashboard')

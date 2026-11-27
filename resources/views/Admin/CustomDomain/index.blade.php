@@ -123,7 +123,10 @@
                                     @endif
                                 </div>
                                 @if($item->verified_at)
-                                    <p class="text-[11px] text-[#7f837e]">Terverifikasi {{ $item->verified_at->diffForHumans() }} · SSL: {{ strtoupper($item->ssl_status) }}</p>
+                                    <p class="text-[11px] text-[#7f837e]">
+                                        Terverifikasi {{ $item->verified_at->diffForHumans() }} · SSL: {{ strtoupper($item->ssl_status) }}
+                                        · <a href="https://{{ $item->domain }}/admin/login" target="_blank" rel="noopener" class="font-semibold text-[#df5826] hover:underline">Login Dashboard ↗</a>
+                                    </p>
                                 @elseif($item->isPendingApproval())
                                     <p class="text-[12px] font-medium text-sky-700">DNS sudah terverifikasi! Pengajuan sedang ditinjau Admin OQARI Plus untuk diaktifkan di server.</p>
                                 @elseif($item->last_error)

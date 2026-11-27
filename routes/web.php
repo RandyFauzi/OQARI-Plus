@@ -351,6 +351,7 @@ Route::get('/receipt/{order}', [ReceiptController::class, 'show'])->middleware('
 Route::get('/receipt/{order}/pdf', [ReceiptController::class, 'downloadPdf'])->middleware('schema:orders')->name('receipt.pdf');
 
 // Custom Domain Storefront (resolved by ResolveCustomDomain middleware)
+Route::get('/menu', [ShopController::class, 'showCustomDomain'])->name('custom-domain.menu');
 Route::get('/cart', [ShopController::class, 'cartCustomDomain'])->name('custom-domain.cart');
 Route::get('/tracking', [ShopController::class, 'trackingCustomDomain'])->name('custom-domain.tracking');
 Route::post('/voucher/validate', [ShopController::class, 'validateVoucherCustomDomain'])->middleware('schema:checkout')->name('custom-domain.voucher.validate');
