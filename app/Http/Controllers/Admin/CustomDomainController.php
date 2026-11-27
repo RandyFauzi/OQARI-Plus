@@ -45,6 +45,10 @@ class CustomDomainController extends Controller
             return back()->with('success', "Domain {$verified->domain} aktif dan terhubung ke toko Anda.");
         }
 
+        if ($verified->isPendingApproval()) {
+            return back()->with('success', "DNS {$verified->domain} terverifikasi! Pengajuan telah dikirim ke Admin OQARI Plus untuk diaktifkan di server.");
+        }
+
         return back()->withErrors(['domain' => $verified->last_error ?: 'Verifikasi DNS belum berhasil.']);
     }
 

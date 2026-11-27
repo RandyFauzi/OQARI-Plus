@@ -340,6 +340,8 @@ Route::middleware(['auth', 'superadmin', 'schema:platform'])->prefix('superadmin
     Route::resource('shops', App\Http\Controllers\SuperAdmin\ShopController::class);
     Route::post('/shops/{shop}/suspend', [App\Http\Controllers\SuperAdmin\ShopController::class, 'suspend'])->name('shops.suspend');
     Route::post('/shops/{shop}/activate', [App\Http\Controllers\SuperAdmin\ShopController::class, 'activate'])->name('shops.activate');
+    Route::post('/custom-domains/{domain}/approve', [App\Http\Controllers\SuperAdmin\CustomDomainController::class, 'approve'])->whereNumber('domain')->name('custom-domains.approve');
+    Route::post('/custom-domains/{domain}/reject', [App\Http\Controllers\SuperAdmin\CustomDomainController::class, 'reject'])->whereNumber('domain')->name('custom-domains.reject');
     Route::resource('users', UserController::class);
 });
 

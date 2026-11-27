@@ -5,29 +5,28 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | CNAME Target for Tenant Custom Domains (Cloudflare for SaaS)
+    | Approval Mode
     |--------------------------------------------------------------------------
     |
-    | Tenants point their custom subdomain/domain (e.g. order.tokomerek.com)
-    | to this CNAME target. Cloudflare for SaaS handles TLS/SSL termination
-    | and forwards traffic to your Hostinger origin.
+    | 'manual' (default for Hostinger): Owner verifies DNS -> status becomes
+    | 'pending_approval' -> Admin receives email & SuperAdmin notification ->
+    | Admin adds Parked Domain in Hostinger and clicks Approve.
+    |
+    | 'auto': Automatically activates via Cloudflare for SaaS API.
     |
     */
-    'cname_target' => env('CUSTOM_DOMAIN_CNAME_TARGET', 'cname.oqariplus.appku.site'),
+    'approval_mode' => env('CUSTOM_DOMAIN_APPROVAL_MODE', 'manual'),
+
+    'admin_notification_email' => env('CUSTOM_DOMAIN_ADMIN_EMAIL', 'randyfauzi24@gmail.com'),
+
+    'cname_target' => env('CUSTOM_DOMAIN_CNAME_TARGET', 'oqariplus.appku.site'),
+
+    'origin_ip' => env('CUSTOM_DOMAIN_ORIGIN_IP', '46.202.186.252'),
 
     'txt_prefix' => '_oqari-verify',
 
     'cache_ttl_seconds' => 300,
 
-    /*
-    |--------------------------------------------------------------------------
-    | Reserved / System Hosts
-    |--------------------------------------------------------------------------
-    |
-    | Hosts that cannot be claimed by tenants and are always treated as main
-    | application hosts (never resolved as tenant custom domains).
-    |
-    */
     'system_hosts' => array_values(array_filter(array_unique([
         'localhost',
         '127.0.0.1',

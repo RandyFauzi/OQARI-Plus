@@ -2,10 +2,13 @@
 
 namespace App\Services\CustomDomain;
 
+use App\Mail\CustomDomainRequestedMail;
 use App\Models\Shop;
 use App\Models\ShopDomain;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -108,11 +111,20 @@ class CustomDomainService
     {
         $lookup = $dnsLookup ?? static fn (string $host, int $type): array => @dns_get_record($host, $type) ?: [];
 
-        $expectedTarget = strtolower((string) config('custom_domains.cname_target', 'cname.oqariplus.appku.site'));
+        $expectedTarget = strtolower((string) config('custom_domains.cname_target', 'oqariplus.appku.site'));
+        $expectedIp = (string) config('custom_domains.origin_ip', '46.202.186.252');
+
         $cnameRecords = $lookup($shopDomain->domain, DNS_CNAME);
         $cnameMatched = collect($cnameRecords)->contains(function (array $record) use ($expectedTarget): bool {
             return strtolower(rtrim((string) ($record['target'] ?? ''), '.')) === $expectedTarget;
         });
+
+        $aRecords = $cnameMatched ? [] : $lookup($shopDomain->domain, DNS_A);
+        $aMatched = collect($aRecords)->contains(function (array $record) use ($expectedIp): bool {
+            return (string) ($record['ip'] ?? '') === $expectedIp;
+        });
+
+        $pointingMatched = $cnameMatched || $aMatched;
 
         $txtRecords = $lookup($shopDomain->txtRecordName(), DNS_TXT);
         $expectedTxt = $shopDomain->txtRecordValue();
@@ -122,10 +134,10 @@ class CustomDomainService
             return $txt === $expectedTxt;
         });
 
-        if (! $cnameMatched || ! $txtMatched) {
+        if (! $pointingMatched || ! $txtMatched) {
             $missing = [];
-            if (! $cnameMatched) {
-                $missing[] = "CNAME {$shopDomain->domain} → {$expectedTarget}";
+            if (! $pointingMatched) {
+                $missing[] = "CNAME {$shopDomain->domain} → {$expectedTarget} (atau A → {$expectedIp})";
             }
             if (! $txtMatched) {
                 $missing[] = "TXT {$shopDomain->txtRecordName()} = {$expectedTxt}";
@@ -137,6 +149,21 @@ class CustomDomainService
                 'last_error' => 'Record DNS belum sesuai: '.implode(' dan ', $missing).'.',
             ]);
             $this->forgetCache($shopDomain->domain);
+
+            return $shopDomain->fresh();
+        }
+
+        $autoApprove = config('custom_domains.approval_mode') === 'auto' && $this->cloudflare->isConfigured();
+
+        if (! $autoApprove) {
+            $shopDomain->update([
+                'status' => ShopDomain::STATUS_PENDING_APPROVAL,
+                'ssl_status' => 'pending',
+                'last_checked_at' => now(),
+                'last_error' => null,
+            ]);
+            $this->forgetCache($shopDomain->domain);
+            $this->notifyAdminOfRequest($shopDomain);
 
             return $shopDomain->fresh();
         }
@@ -162,6 +189,49 @@ class CustomDomainService
         $this->forgetCache($shopDomain->domain);
 
         return $shopDomain->fresh();
+    }
+
+    public function approve(ShopDomain $shopDomain): ShopDomain
+    {
+        $shopDomain->update([
+            'status' => ShopDomain::STATUS_ACTIVE,
+            'ssl_status' => 'active',
+            'verified_at' => $shopDomain->verified_at ?? now(),
+            'last_checked_at' => now(),
+            'last_error' => null,
+        ]);
+        $this->forgetCache($shopDomain->domain);
+
+        return $shopDomain->fresh();
+    }
+
+    public function reject(ShopDomain $shopDomain, ?string $reason = null): ShopDomain
+    {
+        $shopDomain->update([
+            'status' => ShopDomain::STATUS_FAILED,
+            'last_checked_at' => now(),
+            'last_error' => $reason ?: 'Pengajuan domain ditolak oleh Admin OQARI Plus.',
+        ]);
+        $this->forgetCache($shopDomain->domain);
+
+        return $shopDomain->fresh();
+    }
+
+    private function notifyAdminOfRequest(ShopDomain $shopDomain): void
+    {
+        $adminEmail = trim((string) config('custom_domains.admin_notification_email', ''));
+        if ($adminEmail === '') {
+            return;
+        }
+
+        try {
+            Mail::to($adminEmail)->send(new CustomDomainRequestedMail($shopDomain));
+        } catch (Throwable $e) {
+            Log::warning('Gagal mengirim email notifikasi pengajuan domain kustom.', [
+                'domain' => $shopDomain->domain,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     public function remove(ShopDomain $shopDomain): void

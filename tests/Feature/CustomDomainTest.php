@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\CustomDomainRequestedMail;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Models\ShopDomain;
@@ -9,6 +10,7 @@ use App\Models\User;
 use App\Services\CustomDomain\CustomDomainService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class CustomDomainTest extends TestCase
@@ -27,7 +29,7 @@ class CustomDomainTest extends TestCase
         $this->actingAs($owner)->get(route('admin.custom-domain.index'))
             ->assertOk()
             ->assertSee('Domain Kustom')
-            ->assertSee('Cloudflare for SaaS');
+            ->assertSee('Panduan Setting Domain Kustom');
     }
 
     public function test_owner_can_register_domain_and_system_or_duplicate_domains_are_rejected(): void
@@ -63,10 +65,76 @@ class CustomDomainTest extends TestCase
         ])->assertSessionHasErrors('domain');
     }
 
+    public function test_manual_hostinger_approval_notifies_admin_email_and_superadmin_dashboard(): void
+    {
+        Mail::fake();
+
+        config([
+            'custom_domains.enabled' => true,
+            'custom_domains.approval_mode' => 'manual',
+            'custom_domains.admin_notification_email' => 'randyfauzi24@gmail.com',
+            'custom_domains.cname_target' => 'oqariplus.appku.site',
+            'custom_domains.origin_ip' => '46.202.186.252',
+        ]);
+
+        $shop = Shop::factory()->create(['name' => 'Burgerkat Hostinger', 'slug' => 'burgerkat-hostinger']);
+        $superadmin = User::factory()->create(['shop_id' => null, 'role' => 'superadmin']);
+        Product::create([
+            'shop_id' => $shop->id,
+            'category_name' => 'Burgers',
+            'name' => 'Smash Burger Hostinger',
+            'price' => 35000,
+        ]);
+
+        $service = app(CustomDomainService::class);
+        $record = $service->register($shop, 'order.burgerkat.com');
+
+        $verified = $service->verify($record, function (string $host, int $type) use ($record): array {
+            if ($type === DNS_A && $host === 'order.burgerkat.com') {
+                return [['ip' => '46.202.186.252']];
+            }
+            if ($type === DNS_TXT && $host === $record->txtRecordName()) {
+                return [['txt' => $record->txtRecordValue()]];
+            }
+
+            return [];
+        });
+
+        // Must NOT auto-activate in manual mode
+        $this->assertTrue($verified->isPendingApproval());
+        $this->assertFalse($verified->isActive());
+
+        Mail::assertSent(CustomDomainRequestedMail::class, function (CustomDomainRequestedMail $mail): bool {
+            return $mail->hasTo('randyfauzi24@gmail.com') && $mail->shopDomain->domain === 'order.burgerkat.com';
+        });
+
+        // Domain is still 404 before SuperAdmin approves
+        $this->get('http://order.burgerkat.com/')->assertNotFound();
+
+        // SuperAdmin sees notification on dashboard and approves it
+        $this->actingAs($superadmin)
+            ->get('http://localhost/superadmin/dashboard')
+            ->assertOk()
+            ->assertSee('Notifikasi Pengajuan Domain Kustom')
+            ->assertSee('order.burgerkat.com');
+
+        $this->actingAs($superadmin)
+            ->post('http://localhost/superadmin/custom-domains/'.$verified->id.'/approve')
+            ->assertRedirect();
+
+        $this->assertTrue($verified->fresh()->isActive());
+
+        // Now storefront is live on custom domain
+        $this->get('http://order.burgerkat.com/')
+            ->assertOk()
+            ->assertSee('Smash Burger Hostinger');
+    }
+
     public function test_dns_verification_syncs_cloudflare_and_serves_storefront_on_custom_domain(): void
     {
         config([
             'custom_domains.enabled' => true,
+            'custom_domains.approval_mode' => 'auto',
             'custom_domains.cname_target' => 'cname.oqariplus.appku.site',
             'custom_domains.cloudflare.enabled' => true,
             'custom_domains.cloudflare.zone_id' => 'zone-123',

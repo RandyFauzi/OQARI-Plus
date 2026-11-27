@@ -32,8 +32,8 @@
                 <span>Owner Only</span>
             </span>
             <span class="inline-flex items-center gap-1.5 rounded-full border border-[#e9ebf0] bg-white px-3 py-1.5 text-[11px] font-medium text-[#53565a]">
-                <span class="h-1.5 w-1.5 rounded-full {{ $cloudflareEnabled ? 'bg-emerald-500' : 'bg-amber-400' }}" aria-hidden="true"></span>
-                <span>Cloudflare for SaaS SSL</span>
+                <span class="h-1.5 w-1.5 rounded-full {{ $cloudflareEnabled && config('custom_domains.approval_mode') === 'auto' ? 'bg-emerald-500' : 'bg-sky-500' }}" aria-hidden="true"></span>
+                <span>{{ $cloudflareEnabled && config('custom_domains.approval_mode') === 'auto' ? 'Cloudflare for SaaS SSL' : 'Verifikasi & Persetujuan Admin' }}</span>
             </span>
         </div>
     </header>
@@ -101,6 +101,11 @@
                                             <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                                             Aktif &amp; Terhubung
                                         </span>
+                                    @elseif($item->isPendingApproval())
+                                        <span class="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-[10px] font-semibold text-sky-700">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
+                                            Menunggu Persetujuan Admin
+                                        </span>
                                     @elseif($item->status === \App\Models\ShopDomain::STATUS_FAILED)
                                         <span class="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[10px] font-semibold text-red-700">
                                             Verifikasi Gagal
@@ -113,6 +118,8 @@
                                 </div>
                                 @if($item->verified_at)
                                     <p class="text-[11px] text-[#7f837e]">Terverifikasi {{ $item->verified_at->diffForHumans() }} · SSL: {{ strtoupper($item->ssl_status) }}</p>
+                                @elseif($item->isPendingApproval())
+                                    <p class="text-[12px] font-medium text-sky-700">DNS sudah terverifikasi! Pengajuan sedang ditinjau Admin OQARI Plus untuk diaktifkan di server.</p>
                                 @elseif($item->last_error)
                                     <p class="text-[12px] font-medium text-red-600">{{ $item->last_error }}</p>
                                 @endif

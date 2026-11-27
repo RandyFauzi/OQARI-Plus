@@ -10,6 +10,8 @@ class ShopDomain extends Model
 {
     public const STATUS_PENDING = 'pending';
 
+    public const STATUS_PENDING_APPROVAL = 'pending_approval';
+
     public const STATUS_ACTIVE = 'active';
 
     public const STATUS_FAILED = 'failed';
@@ -51,6 +53,11 @@ class ShopDomain extends Model
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;
+    }
+
+    public function isPendingApproval(): bool
+    {
+        return $this->status === self::STATUS_PENDING_APPROVAL;
     }
 
     public function txtRecordName(): string
