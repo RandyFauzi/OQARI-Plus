@@ -23,7 +23,7 @@ class EnsureAccountIsActive
         }
 
         $customShop = $request->attributes->get('custom_domain_shop');
-        if ($user && $customShop && (int) $user->shop_id !== (int) $customShop->id) {
+        if ($user && $customShop && $request->is('admin', 'admin/*', 'cabang', 'cabang/*') && (int) $user->shop_id !== (int) $customShop->id) {
             Auth::guard('web')->logout();
             if ($request->hasSession()) {
                 $request->session()->invalidate();
