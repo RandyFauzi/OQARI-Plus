@@ -5765,12 +5765,13 @@ if (res.ok) {
 
     <!-- Floating Action Button to Customer Menu -->
     @php
+        $branchForMenu = app(\App\Services\BranchContext::class)->branch();
         $customerMenuHref = request()->attributes->has('custom_domain_shop')
-            ? ($shop->branches_enabled && !empty($activeBranch)
-                ? route('custom-domain.branch.menu', ['branchSlug' => $activeBranch->slug])
+            ? ($shop->branches_enabled && $branchForMenu
+                ? route('custom-domain.branch.menu', ['branchSlug' => $branchForMenu->slug])
                 : route('custom-domain.menu'))
-            : ($shop->branches_enabled && !empty($activeBranch)
-                ? route('shop.branch.menu', ['slug' => $shop->slug, 'branchSlug' => $activeBranch->slug])
+            : ($shop->branches_enabled && $branchForMenu
+                ? route('shop.branch.menu', ['slug' => $shop->slug, 'branchSlug' => $branchForMenu->slug])
                 : null);
     @endphp
     <a @if($customerMenuHref) href="{{ $customerMenuHref }}" @else :href="'/' + settings.slug" @endif target="_blank" class="fixed bottom-10 right-10 bg-primary text-white p-4 rounded-full shadow-2xl flex items-center justify-center hover:scale-105 hover:bg-primary-dark transition-all z-[100] group border-4 border-white">
